@@ -100,6 +100,8 @@ class Scanner:
             self.line += 1
         elif c == '"':
             self._handle_string()
+        elif c.isdigit():
+            self._handle_number()
         else:
             Lox.error(self.line, "Unexpected character: %s." % c)
 
@@ -124,6 +126,11 @@ class Scanner:
             return ''
         return self.source[self.current]
 
+    def peek_next(self):
+        if self.current + 1 >= len(self.source):
+            return ''
+        return self.source[self.current + 1]
+
     def add_token(self, tokentype, literal=None):
         text = self.source[self.start:self.current]
         self.tokens.append(
@@ -147,6 +154,17 @@ class Scanner:
         value = self.source[self.start + 1: self.current - 1]
         self.add_token(TokenType.STRING, value)
 
+    def _handle_number(self):
+        while self.peek().isdigit() and not self._is_at_end():
+            self.advance()
+
+        if self.peek() == '.' and self.peek_next().isdigit():
+            # Consume the '.'
+            self.advance()
+            while self.peek().isdigit() and not self._is_at_end():
+                self.advance()
+        value = self.source[self.start:self.current]
+        self.add_token(TokenType.NUMBER, float(value))
 
 class Lox:
     def __init__(self):
