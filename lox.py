@@ -78,6 +78,14 @@ class Scanner:
             self.add_token(TokenType.SEMICOLON)
         elif c == '*':
             self.add_token(TokenType.STAR)
+        elif c == '!':
+            self.add_token(TokenType.BANG_EQUAL if self.match('=') else TokenType.BANG)
+        elif c == '=':
+            self.add_token(TokenType.EQUAL_EQUAL if self.match('=') else TokenType.EQUAL)
+        elif c == '<':
+            self.add_token(TokenType.LESS_EQUAL if self.match('=') else TokenType.LESS)
+        elif c == '>':
+            self.add_token(TokenType.GREATER_EQUAL if self.match('=') else TokenType.GREATER)
         else:
             Lox.error(self.line, "Unexpected character: %s." % c)
 
@@ -85,6 +93,17 @@ class Scanner:
         c = self.source[self.current]
         self.current += 1
         return c
+
+    def match(self, expected):
+        """
+        Consume next char only if it's the expected one
+        """
+        if self._is_at_end():
+            return False
+        if self.source[self.current] != expected:
+            return False
+        self.current += 1
+        return True
 
     def add_token(self, tokentype, literal=None):
         text = self.source[self.start:self.current]
