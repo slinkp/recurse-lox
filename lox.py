@@ -1,13 +1,63 @@
 #!/usr/bin/env python3
 
 import sys
+import enum
+
+TokenType = enum.Enum(
+    'TokenType',
+    [
+        # Single-character tokens.
+        'LEFT_PAREN', 'RIGHT_PAREN', 'LEFT_BRACE', 'RIGHT_BRACE',
+        'COMMA', 'DOT', 'MINUS', 'PLUS', 'SEMICOLON', 'SLASH', 'STAR',
+
+        # One or two character tokens.
+        'BANG', 'BANG_EQUAL',
+        'EQUAL', 'EQUAL_EQUAL',
+        'GREATER', 'GREATER_EQUAL',
+        'LESS', 'LESS_EQUAL',
+
+        # Literals.
+        'IDENTIFIER', 'STRING', 'NUMBER',
+
+        # Keywords.
+        'AND', 'CLASS', 'ELSE', 'FALSE', 'FUN', 'FOR', 'IF', 'NIL', 'OR',
+        'PRINT', 'RETURN', 'SUPER', 'THIS', 'TRUE', 'VAR', 'WHILE',
+        'EOF'
+    ]
+)
+
+class Token:
+    def __init__(self, tokentype, lexeme, literal, line):
+        self.tokentype = tokentype
+        self.lexeme = lexeme
+        self.literal = literal
+        self.line = line
+
+    def __str__(self):
+        return "%s %s %s" % (self.tokentype, self.lexeme, self.literal)
+
 
 class Scanner:
     def __init__(self, source):
-        pass
+        self.source = source
+        self.start = 0
+        self.current = 0
+        self.line = 1
+
+    def _is_at_end(self):
+        return self.current >= len(self.source)
 
     def scan_tokens(self):
-        return []
+        tokens = []
+        while not self._is_at_end():
+            self.start = self.current
+            self.scan_token()
+
+        tokens.append(Token(TokenType.EOF, "", None, self.line))
+        return tokens
+
+    def scan_token(self):
+       self.current += 1  # XXX
 
 class Lox:
     def __init__(self):
