@@ -1,6 +1,6 @@
 import unittest
-from ..expression import *
-from ..scanner import Token, TokenType
+from lox.expression import *
+from lox.scanner import Token, TokenType
 
 class Tests(unittest.TestCase):
 
