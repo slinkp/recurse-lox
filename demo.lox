@@ -1,0 +1,7 @@
+var language = "lox"; // stuff
+var foo = language + "yay";
+{
+    var x = 1;
+    var y = 2.37 ;
+    x <= y;
+}
