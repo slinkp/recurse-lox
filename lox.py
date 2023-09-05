@@ -3,6 +3,7 @@
 import sys
 import enum
 
+
 TokenType = enum.Enum(
     'TokenType',
     [
@@ -25,6 +26,25 @@ TokenType = enum.Enum(
         'EOF'
     ]
 )
+
+keywords = {
+    "and": TokenType.AND,
+    "class": TokenType.CLASS,
+    "else": TokenType.ELSE,
+    "false": TokenType.FALSE,
+    "for": TokenType.FOR,
+    "fun": TokenType.FUN,
+    "if": TokenType.IF,
+    "nil": TokenType.NIL,
+    "or": TokenType.OR,
+    "print": TokenType.PRINT,
+    "return": TokenType.RETURN,
+    "super": TokenType.SUPER,
+    "this": TokenType.THIS,
+    "true": TokenType.TRUE,
+    "var": TokenType.VAR,
+    "while": TokenType.WHILE,
+}
 
 class Token:
     def __init__(self, tokentype, lexeme, literal, line):
@@ -102,6 +122,8 @@ class Scanner:
             self._handle_string()
         elif c.isdigit():
             self._handle_number()
+        elif c.isalpha():
+            self._handle_identifier()
         else:
             Lox.error(self.line, "Unexpected character: %s." % c)
 
@@ -165,6 +187,15 @@ class Scanner:
                 self.advance()
         value = self.source[self.start:self.current]
         self.add_token(TokenType.NUMBER, float(value))
+
+    def _handle_identifier(self):
+        while self.peek().isalnum():
+            # Consume as many letters/digits as possible.
+            # Important not to tokenize eg `or` as OR when we have `orange` as IDENTIFIER.
+            self.advance()
+        value = self.source[self.start:self.current]
+        tokentype = keywords.get(value, TokenType.IDENTIFIER)
+        self.add_token(tokentype, value)
 
 class Lox:
     def __init__(self):
