@@ -43,21 +43,53 @@ class Scanner:
         self.start = 0
         self.current = 0
         self.line = 1
+        self.tokens = []
 
     def _is_at_end(self):
         return self.current >= len(self.source)
 
     def scan_tokens(self):
-        tokens = []
         while not self._is_at_end():
             self.start = self.current
             self.scan_token()
 
-        tokens.append(Token(TokenType.EOF, "", None, self.line))
-        return tokens
+        self.tokens.append(Token(TokenType.EOF, "", None, self.line))
+        return self.tokens
 
     def scan_token(self):
-       self.current += 1  # XXX
+        c = self._advance()
+        if c == '(':
+            self.add_token(TokenType.LEFT_PAREN)
+        if c == ')':
+            self.add_token(TokenType.RIGHT_PAREN)
+        if c == '{':
+            self.add_token(TokenType.LEFT_BRACE)
+        if c == '}':
+            self.add_token(TokenType.RIGHT_BRACE)
+        if c == ',':
+            self.add_token(TokenType.COMMA)
+        if c == '.':
+            self.add_token(TokenType.DOT)
+        if c == '-':
+            self.add_token(TokenType.MINUS)
+        if c == '+':
+            self.add_token(TokenType.PLUS)
+        if c == ';':
+            self.add_token(TokenType.SEMICOLON)
+        if c == '*':
+            self.add_token(TokenType.STAR)
+
+    def _advance(self):
+        c = self.source[self.current]
+        self.current += 1
+        return c
+
+    def add_token(self, tokentype, literal=None):
+        text = self.source[self.start:self.current]
+        self.tokens.append(
+            Token(tokentype, text, literal, self.line)
+        )
+
 
 class Lox:
     def __init__(self):
