@@ -60,24 +60,26 @@ class Scanner:
         c = self._advance()
         if c == '(':
             self.add_token(TokenType.LEFT_PAREN)
-        if c == ')':
+        elif c == ')':
             self.add_token(TokenType.RIGHT_PAREN)
-        if c == '{':
+        elif c == '{':
             self.add_token(TokenType.LEFT_BRACE)
-        if c == '}':
+        elif c == '}':
             self.add_token(TokenType.RIGHT_BRACE)
-        if c == ',':
+        elif c == ',':
             self.add_token(TokenType.COMMA)
-        if c == '.':
+        elif c == '.':
             self.add_token(TokenType.DOT)
-        if c == '-':
+        elif c == '-':
             self.add_token(TokenType.MINUS)
-        if c == '+':
+        elif c == '+':
             self.add_token(TokenType.PLUS)
-        if c == ';':
+        elif c == ';':
             self.add_token(TokenType.SEMICOLON)
-        if c == '*':
+        elif c == '*':
             self.add_token(TokenType.STAR)
+        else:
+            Lox.error(self.line, "Unexpected character: %s." % c)
 
     def _advance(self):
         c = self.source[self.current]
@@ -126,12 +128,14 @@ class Lox:
         for token in tokens:
             print(token)
 
-    def error(self, line, message):
-        self.report(line, "", message)
+    @classmethod
+    def error(cls, line, message):
+        cls.report(line, "", message)
 
-    def report(self, line, where, message):
+    @classmethod
+    def report(cls, line, where, message):
         print(
-            "[line " + line + "] Error " + where + ": " + message,
+            "[line %s] Error %s: %s" % (line, where, message),
             file=sys.stderr)
 
 
