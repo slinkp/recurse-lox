@@ -1,13 +1,11 @@
 import unittest
-from lox.expression import *
-from lox.scanner import Token, TokenType
 
 class Tests(unittest.TestCase):
 
     def test(self):
-        # operator=Unary(
-        #     operator=Token(TokenType.MINUS, "-", None, 1),
-        #     right=Literal(123))
+        # Need to import at runtime because ... reasons
+        from lox.scanner import Token, TokenType
+        from lox.expression import Binary, Unary, Literal, Grouping, ASTPrinter
 
         expr = Binary(
             left=Unary(

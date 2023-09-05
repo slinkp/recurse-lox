@@ -57,6 +57,18 @@ class Token:
     def __str__(self):
         return "%s %s %s" % (self.tokentype, self.lexeme, self.literal)
 
+    def __repr__(self):
+        return "Token(%s)" % str(self)
+
+    def __eq__(self, other):
+        if not isinstance(other, Token):
+            return False
+        return all([
+            self.tokentype == other.tokentype,
+            self.lexeme == other.lexeme,
+            self.literal == other.literal
+            ])  # Ignore line
+
 
 class Scanner:
     def __init__(self, source):
