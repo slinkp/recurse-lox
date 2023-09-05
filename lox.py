@@ -57,7 +57,7 @@ class Scanner:
         return self.tokens
 
     def scan_token(self):
-        c = self._advance()
+        c = self.advance()
         if c == '(':
             self.add_token(TokenType.LEFT_PAREN)
         elif c == ')':
@@ -91,17 +91,19 @@ class Scanner:
                 # Comments go to end of line
                 print("Skipping comment")
                 while self.peek() != '\n' and not self._is_at_end():
-                    self._advance()
+                    self.advance()
             else:
                 self.add_token(TokenType.SLASH)
         elif c in (' ', '\r', '\t'):
             pass
         elif c == '\n':
             self.line += 1
+        elif c == '"':
+            self._handle_string()
         else:
             Lox.error(self.line, "Unexpected character: %s." % c)
 
-    def _advance(self):
+    def advance(self):
         c = self.source[self.current]
         self.current += 1
         return c
@@ -127,6 +129,23 @@ class Scanner:
         self.tokens.append(
             Token(tokentype, text, literal, self.line)
         )
+
+    def _handle_string(self):
+        while self.peek() != '"' and not self._is_at_end():
+            if self.peek() == '\n':
+                self.line += 1
+            self.advance()
+
+        if self._is_at_end():
+            Lox.error(self.line, "Unterminated string.")
+            return
+
+        # The closing ".
+        self.advance()
+
+        # Trim the surrounding quotes.
+        value = self.source[self.start + 1: self.current - 1]
+        self.add_token(TokenType.STRING, value)
 
 
 class Lox:
