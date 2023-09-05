@@ -86,6 +86,14 @@ class Scanner:
             self.add_token(TokenType.LESS_EQUAL if self.match('=') else TokenType.LESS)
         elif c == '>':
             self.add_token(TokenType.GREATER_EQUAL if self.match('=') else TokenType.GREATER)
+        elif c == '/':
+            if self.match('/'):
+                # Comments go to end of line
+                print("Skipping comment")
+                while self.peek() != '\n' and not self._is_at_end():
+                    self._advance()
+            else:
+                self.add_token(TokenType.SLASH)
         else:
             Lox.error(self.line, "Unexpected character: %s." % c)
 
@@ -104,6 +112,11 @@ class Scanner:
             return False
         self.current += 1
         return True
+
+    def peek(self):
+        if self._is_at_end():
+            return ''
+        return self.source[self.current]
 
     def add_token(self, tokentype, literal=None):
         text = self.source[self.start:self.current]
