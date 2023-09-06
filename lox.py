@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import sys
-import enum
 
 from lox.scanner import Scanner
 
@@ -9,7 +8,7 @@ class Lox:
     def __init__(self):
         self.had_error = False
 
-    def main(self, args):
+    def main(self, args: list[str]):
         if len(args) > 1:
             print("Usage: lox.py [script]")
             sys.exit(64)
@@ -18,7 +17,7 @@ class Lox:
         else:
             self.run_prompt()
 
-    def run_file(self, path):
+    def run_file(self, path: str):
         _bytes = open(path, 'r').read()
         self.run(_bytes)
         if self.had_error:
@@ -32,7 +31,7 @@ class Lox:
             self.run(line)
             self.had_error = False
 
-    def run(self, source):
+    def run(self, source: str):
         scanner = Scanner(source)
         tokens = scanner.scan_tokens()
 
