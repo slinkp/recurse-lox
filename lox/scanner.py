@@ -2,6 +2,7 @@
 
 import sys
 import enum
+from typing import Optional
 
 from . import error
 
@@ -48,7 +49,7 @@ keywords = {
 }
 
 class Token:
-    def __init__(self, tokentype, lexeme, literal, line):
+    def __init__(self, tokentype: TokenType, lexeme: str, literal: Optional[str], line: int):
         self.tokentype = tokentype
         self.lexeme = lexeme
         self.literal = literal

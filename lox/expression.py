@@ -84,7 +84,7 @@ class ASTPrinter(ASTVisitor):
     def visit_unary_expr(self, expr: Unary):
         return self.parenthesize(expr.operator.lexeme, expr.right)
 
-    def parenthesize(self, name, *exprs):
+    def parenthesize(self, name, *exprs: Expr):
         strings = ' '.join(expr.accept(self) or "" for expr in exprs)
         return "(%s %s)" % (name, strings)
 
