@@ -35,14 +35,14 @@ class Lox:
     def run(self, source: str):
         scanner = Scanner(source)
         tokens = scanner.scan_tokens()
-        print( tokens)
+        # print( tokens)
         parser = Parser(tokens)
         expression = parser.parse()
         if expression is None:
             return
         if self.had_error:
             return
-        ASTPrinter().print(expression)
+        print("Tree:", ASTPrinter().print(expression))
 
 
 if __name__ == '__main__':
