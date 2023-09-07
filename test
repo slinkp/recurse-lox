@@ -16,4 +16,5 @@ mypy -p lox
 mypy lox.py
 
 echo Testing...
-python -m unittest -v tests/test*py
+coverage run -m unittest -v tests/test*py
+coverage report -m

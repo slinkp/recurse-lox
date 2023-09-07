@@ -37,5 +37,18 @@ class Tests(unittest.TestCase):
             ],
             tokens)
 
-
-    # Not going to burn a lot of time here, but it's good to have a place to dump things when I find bugs
+    def test_slashes(self):
+        source = '  1 / 2 // 3 / 4\n 5 / 6'
+        scanner = Scanner(source)
+        tokens = scanner.scan_tokens()
+        self.assertEqual(
+            [
+                Token(TokenType.NUMBER, "1", 1.0, 1),
+                Token(TokenType.SLASH, "/", None, 1),
+                Token(TokenType.NUMBER, "2", 2.0, 1),
+                Token(TokenType.NUMBER, "5", 5.0, 1),
+                Token(TokenType.SLASH, "/", None, 1),
+                Token(TokenType.NUMBER, "6", 6.0, 1),
+                self.eof,
+            ],
+            tokens)
