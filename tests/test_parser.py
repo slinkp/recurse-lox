@@ -1,5 +1,5 @@
 import unittest
-from lox.parser import Parser
+from lox.parser import Parser, ParseError
 from lox.tokentype import TokenType
 from lox.scanner import Token
 from lox.expression import Literal
@@ -38,3 +38,16 @@ class Tests(unittest.TestCase):
         parser = Parser(tokens)
         expr = parser.parse()
         self.assertEqual(None, expr)
+
+    def test_consume(self):
+        tokens = [
+            Token(TokenType.VAR, 'var', 'var'),
+            Token(TokenType.EOF, '', None),
+        ]
+        parser = Parser(tokens)
+        with self.assertRaises(ParseError):
+            parser.consume(TokenType.EQUAL_EQUAL, "whoops expected ===")
+
+        consumed = parser.consume(TokenType.VAR, "okay")
+        self.assertEqual(consumed, tokens[0])
+        self.assertEqual(parser.current, 1)
