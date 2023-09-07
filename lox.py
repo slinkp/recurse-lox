@@ -2,7 +2,8 @@
 import sys
 
 from lox.scanner import Scanner
-
+from lox.parser import Parser
+from lox.expression import ASTPrinter
 
 class Lox:
     def __init__(self):
@@ -34,10 +35,14 @@ class Lox:
     def run(self, source: str):
         scanner = Scanner(source)
         tokens = scanner.scan_tokens()
-
-        # For now just print
-        for token in tokens:
-            print(token)
+        print( tokens)
+        parser = Parser(tokens)
+        expression = parser.parse()
+        if expression is None:
+            return
+        if self.had_error:
+            return
+        ASTPrinter().print(expression)
 
 
 if __name__ == '__main__':

@@ -9,6 +9,12 @@ class Parser:
         self.current = 0
         self.tokens = tokens or []
 
+    def parse(self) -> Optional[Expr]:
+        try:
+            return self.expression()
+        except ParseError:
+            return None
+
     def expression(self):
         return self.equality()
 
@@ -79,7 +85,7 @@ class Parser:
             self.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression")
             return Grouping(expr)
 
-        raise Exception("whoops nothing matched")
+        raise self.error(self.peek(), "Expect expression.")
 
     ############################################################################3
     # Private
@@ -97,10 +103,17 @@ class Parser:
         return self.peek().tokentype == ttype
 
     def is_at_end(self) -> bool:
+        if self.current >= len(self.tokens):
+            # This wasn't in book, but catches eg empty token list
+            return True
         return self.peek().tokentype == TokenType.EOF
 
     def peek(self) -> Token:
+        if self.current >= len(self.tokens):
+            # This wasn't in book, but catches eg empty token list
+            raise ParseError("Unexpected end of stream")
         return self.tokens[self.current]
+
 
     def previous(self) -> Token:
         return self.tokens[self.current - 1]
