@@ -3,12 +3,16 @@
 # Magic to get where this script lives
 HERE=$(cd "${0%/*}" 2>/dev/null; echo "$PWD"/)
 
+
 # 3-finger claw
 shout() { echo "$0: $*" >&2; }  # Just echo an error and the program name
 barf() { shout "$*"; exit 111; }
 safe() { "$@" || barf "cannot $*"; }
 
 safe cd "$HERE"
+
+deactivate 2> /dev/null
+
 source bin/activate || barf "No virtualenv in $HERE??"
 
 echo Type check...
