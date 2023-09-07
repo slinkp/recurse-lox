@@ -25,4 +25,17 @@ class Tests(unittest.TestCase):
             ],
             tokens)
 
+    def test_numbers_and_strings(self):
+        source = ' 123.45 \n "foo bar" '
+        scanner = Scanner(source)
+        tokens = scanner.scan_tokens()
+        self.assertEqual(
+           [
+               Token(TokenType.NUMBER, '123.45', 123.45, 1),
+               Token(TokenType.STRING, '"foo bar"', "foo bar", 1),
+               self.eof,
+            ],
+            tokens)
+
+
     # Not going to burn a lot of time here, but it's good to have a place to dump things when I find bugs

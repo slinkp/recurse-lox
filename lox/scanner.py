@@ -78,6 +78,29 @@ class Scanner:
         self.current = 0
         self.line = 1
         self.tokens = []
+        self._mapping = {
+            '(': TokenType.LEFT_PAREN,
+            ')': TokenType.RIGHT_PAREN,
+            '{': TokenType.LEFT_BRACE,
+            '}': TokenType.RIGHT_BRACE,
+            ',': TokenType.COMMA,
+            '.': TokenType.DOT,
+            '-': TokenType.MINUS,
+            '+': TokenType.PLUS,
+            ';': TokenType.SEMICOLON,
+            '*': TokenType.STAR,
+            '!': self._handle_bang,
+            '=': self._handle_eq,
+            '<': self._handle_lt,
+            '>': self._handle_gt,
+            '/': self._handle_slash,
+            ' ': self._handle_whitespace,
+            '\r': self._handle_whitespace,
+            '\t': self._handle_whitespace,
+            '\n': self._handle_newline,
+            '"': self._handle_string,
+        }
+
 
     def _is_at_end(self):
         return self.current >= len(self.source)
@@ -92,54 +115,50 @@ class Scanner:
 
     def scan_token(self):
         c = self.advance()
-        if c == '(':
-            self.add_token(TokenType.LEFT_PAREN)
-        elif c == ')':
-            self.add_token(TokenType.RIGHT_PAREN)
-        elif c == '{':
-            self.add_token(TokenType.LEFT_BRACE)
-        elif c == '}':
-            self.add_token(TokenType.RIGHT_BRACE)
-        elif c == ',':
-            self.add_token(TokenType.COMMA)
-        elif c == '.':
-            self.add_token(TokenType.DOT)
-        elif c == '-':
-            self.add_token(TokenType.MINUS)
-        elif c == '+':
-            self.add_token(TokenType.PLUS)
-        elif c == ';':
-            self.add_token(TokenType.SEMICOLON)
-        elif c == '*':
-            self.add_token(TokenType.STAR)
-        elif c == '!':
-            self.add_token(TokenType.BANG_EQUAL if self.match('=') else TokenType.BANG)
-        elif c == '=':
-            self.add_token(TokenType.EQUAL_EQUAL if self.match('=') else TokenType.EQUAL)
-        elif c == '<':
-            self.add_token(TokenType.LESS_EQUAL if self.match('=') else TokenType.LESS)
-        elif c == '>':
-            self.add_token(TokenType.GREATER_EQUAL if self.match('=') else TokenType.GREATER)
-        elif c == '/':
-            if self.match('/'):
-                # Comments go to end of line
-                print("Skipping comment")
-                while self.peek() != '\n' and not self._is_at_end():
-                    self.advance()
+        token_or_action = self._mapping.get(c)
+        if isinstance(token_or_action, TokenType):
+            self.add_token(token_or_action)
+        elif callable(token_or_action):
+            token_or_action()
+        elif token_or_action is None:
+            if c.isdigit():
+                self._handle_number()
+            elif c.isalpha():
+                self._handle_identifier()
             else:
-                self.add_token(TokenType.SLASH)
-        elif c in (' ', '\r', '\t'):
-            pass
-        elif c == '\n':
-            self.line += 1
-        elif c == '"':
-            self._handle_string()
-        elif c.isdigit():
-            self._handle_number()
-        elif c.isalpha():
-            self._handle_identifier()
+                self._handle_unexpected_char()
         else:
-            error.error(self.line, "Unexpected character: %s." % c)
+            error.error("Bug! Unhandled case for character %s" % c)
+
+    def _handle_whitespace(self):
+        pass
+
+    def _handle_eq(self):
+        self.add_token(TokenType.EQUAL_EQUAL if self.match('=') else TokenType.EQUAL)
+
+    def _handle_lt(self):
+        self.add_token(TokenType.LESS_EQUAL if self.match('=') else TokenType.LESS)
+
+    def _handle_gt(self):
+        self.add_token(TokenType.GREATER_EQUAL if self.match('=') else TokenType.GREATER)
+
+    def _handle_slash(self):
+        if self.match('/'):
+            # Comments go to end of line
+            print("Skipping comment")
+            while self.peek() != '\n' and not self._is_at_end():
+                self.advance()
+        else:
+            self.add_token(TokenType.SLASH)
+
+    def _handle_newline(self):
+        self.line += 1
+
+    def _handle_bang(self):
+        self.add_token(TokenType.BANG_EQUAL if self.match('=') else TokenType.BANG)
+
+    def _handle_unexpected_char(self):
+        error.error(self.line, "Unexpected character: %s." % self.source[self.current])
 
     def advance(self):
         c = self.source[self.current]
