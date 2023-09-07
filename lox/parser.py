@@ -1,5 +1,5 @@
 from typing import Optional
-from .expression import Expr, Binary, Unary, Literal
+from .expression import Expr, Binary, Unary, Literal, Grouping
 from .tokentype import TokenType
 from .scanner import Token
 from .error import token_error
@@ -74,8 +74,12 @@ class Parser:
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self.previous().literal)
 
-        # TODO parens
-        return Literal(None) # XXX
+        if self.match(TokenType.LEFT_PAREN):
+            expr = self.expression()
+            self.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression")
+            return Grouping(expr)
+
+        raise Exception("whoops nothing matched")
 
     ############################################################################3
     # Private
@@ -106,14 +110,39 @@ class Parser:
             self.current += 1
         return self.previous()
 
-    def consume(self, ttype: TokenType, message: str) -> Token:
+    def consume(self, ttype: TokenType, err_message: str) -> Token:
+        # Like advance() but blows up if token isn't of the expected type
         if self.check(ttype):
             self.advance()
-        raise self.error(self.peek(), message)
+        raise self.error(self.peek(), err_message)
 
     def error(self, token: Token, message: str) -> 'ParseError':
+        # Return instead of raising so the caller can decide
+        # whether to bomb out or attempt to recover and parse more.
+        # https://craftinginterpreters.com/parsing-expressions.html#entering-panic-mode
         token_error(token, message)
         return ParseError()
+
+    def synchronize(self):
+        # Discard tokens until we get to beginning of next statement.
+        # This is for recovering from parse errors and then continuing parsing.
+        self.advance()
+        while not self.is_at_end():
+            if self.previous().type == TokenType.SEMICOLON:
+                return
+            elif self.peek().tokentype in (
+                    TokenType.FUN,
+                    TokenType.VAR,
+                    TokenType.OR,
+                    TokenType.IF,
+                    TokenType.WHILE,
+                    TokenType.PRINT,
+                    TokenType.RETURN,
+            ):
+                return
+            else:
+                self.advance()
+
 
 class ParseError(Exception):
     pass
