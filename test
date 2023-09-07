@@ -17,4 +17,6 @@ mypy lox.py
 
 echo Testing...
 coverage run -m unittest -v tests/test*py
+echo
+echo Coverage report...
 coverage report -m
