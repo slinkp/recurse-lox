@@ -4,13 +4,10 @@ import sys
 from lox.scanner import Scanner
 from lox.parser import Parser
 from lox.expression import ASTPrinter
-from lox.interpreter import Interpreter
 
 class Lox:
     def __init__(self):
         self.had_error = False
-        self.had_runtime_error = False
-        self.interpreter = Interpreter()
 
     def main(self, args: list[str]):
         if len(args) > 1:
@@ -38,13 +35,14 @@ class Lox:
     def run(self, source: str):
         scanner = Scanner(source)
         tokens = scanner.scan_tokens()
+        # print(tokens)
         parser = Parser(tokens)
         expression = parser.parse()
         if expression is None:
             return
         if self.had_error:
             return
-        self.had_runtime_error = self.interpreter.interpret(expression)
+        print(ASTPrinter().print(expression))
 
 
 if __name__ == '__main__':
