@@ -17,13 +17,23 @@ source bin/activate || barf "No virtualenv in $HERE??"
 
 echo Type check...
 mypy -p lox
+STATUS=$?
+
 mypy lox.py
+STATUS=$(($? + $STATUS))
 
 echo Python tests...
 coverage run -m unittest -v tests/test*py
+STATUS=$(($? + $STATUS))
 echo
 echo Coverage report...
 coverage report -m
 echo
 echo Dart tests...
 dart test/test.dart chap06_parsing --interpreter ./lox.py
+STATUS=$(($? + $STATUS))
+
+if [ "$STATUS" -ne "0" ]; then
+    shout "One or more steps reported failure."
+fi
+exit $STATUS
