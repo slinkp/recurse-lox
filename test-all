@@ -15,6 +15,22 @@ deactivate 2> /dev/null
 
 source bin/activate || barf "No virtualenv in $HERE??"
 
+verify_executables() {
+    MISSING=0
+    for executable in "$@"; do
+        which $executable > /dev/null
+        if [ $? -ne 0 ]; then
+            shout "Could not find: $executable"
+            MISSING=$(($MISSING + 1))
+        fi
+    done
+    if [ $MISSING -gt 0 ]; then
+        barf "Install missing dependencies above"
+    fi
+}
+
+verify_executables mypy coverage dart
+
 echo Type check...
 mypy -p lox
 STATUS=$?
