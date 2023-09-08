@@ -39,7 +39,7 @@ mypy lox.py
 STATUS=$(($? + $STATUS))
 
 echo Python tests...
-coverage run -m unittest -v tests/test*py
+coverage run -m unittest -v python_tests/test*py
 STATUS=$(($? + $STATUS))
 echo
 echo Coverage report...
