@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from typing import Optional
+from typing import Optional, List
 
 from . import error
 from .tokentype import TokenType
@@ -28,12 +28,13 @@ keywords = {
 
 
 class Scanner:
-    def __init__(self, source):
+    def __init__(self, source, error_reporter: Optional[error.ErrorReporter]=None):
+        self.error_reporter = error_reporter or error.ErrorReporter()
         self.source = source
         self.start = 0
         self.current = 0
         self.line = 1
-        self.tokens = []
+        self.tokens: List[Token] = []
         self._mapping = {
             '(': TokenType.LEFT_PAREN,
             ')': TokenType.RIGHT_PAREN,
@@ -84,7 +85,7 @@ class Scanner:
             else:
                 self._handle_unexpected_char()
         else:
-            error.error("Bug! Unhandled case for character %s" % c)
+            self.error_reporter.error("Bug! Unhandled case for character %s" % c)
 
     def _handle_whitespace(self):
         pass
@@ -113,7 +114,7 @@ class Scanner:
         self.add_token(TokenType.BANG_EQUAL if self.match('=') else TokenType.BANG)
 
     def _handle_unexpected_char(self):
-        error.error(self.line, "Unexpected character: %s" % self.source[self.current])
+        self.error_reporter.error(self.line, "Unexpected character: %s" % self.source[self.current])
 
     def advance(self):
         c = self.source[self.current]
@@ -154,7 +155,7 @@ class Scanner:
             self.advance()
 
         if self._is_at_end():
-            error.error(self.line, "Unterminated string.")
+            self.error_reporter.error(self.line, "Unterminated string.")
             return
 
         # The closing ".

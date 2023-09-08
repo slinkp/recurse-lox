@@ -5,12 +5,23 @@ from lox.scanner import Scanner
 from lox.parser import Parser
 from lox.expression import ASTPrinter
 from lox.interpreter import Interpreter
+from lox.error import ErrorReporter
 
 class Lox:
     def __init__(self):
-        self.had_error = False
-        self.had_runtime_error = False
-        self.interpreter = Interpreter()
+        self.error_reporter = ErrorReporter()
+        self.interpreter = Interpreter(error_reporter=self.error_reporter)
+
+    @property
+    def had_error(self):
+        return self.error_reporter.had_error
+
+    @property
+    def had_runtime_error(self):
+        return self.error_reporter.had_runtime_error
+
+    def had_any_error(self):
+        return self.had_error or self.had_runtime_error
 
     def main(self, args: list[str]):
         if len(args) > 1:
@@ -24,7 +35,7 @@ class Lox:
     def run_file(self, path: str):
         _bytes = open(path, 'r').read()
         self.run(_bytes)
-        if self.had_error:
+        if self.had_any_error():
             sys.exit(65)
 
     def run_prompt(self):
@@ -33,18 +44,18 @@ class Lox:
             if line is None:
                 break
             self.run(line)
-            self.had_error = False
+            self.error_reporter.reset()
 
     def run(self, source: str):
-        scanner = Scanner(source)
+        scanner = Scanner(source, error_reporter=self.error_reporter)
         tokens = scanner.scan_tokens()
-        parser = Parser(tokens)
+        parser = Parser(tokens, error_reporter=self.error_reporter)
         expression = parser.parse()
         if expression is None:
             return
         if self.had_error:
             return
-        self.had_runtime_error = self.interpreter.interpret(expression)
+        self.interpreter.interpret(expression)
 
 
 if __name__ == '__main__':

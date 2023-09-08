@@ -2,12 +2,13 @@ from typing import Optional
 from .expression import Expr, Binary, Unary, Literal, Grouping
 from .tokentype import TokenType
 from .scanner import Token
-from .error import token_error
+from .error import ErrorReporter
 
 class Parser:
-    def __init__(self, tokens: Optional[list[Token]] = None):
+    def __init__(self, tokens: Optional[list[Token]] = None, error_reporter: Optional[ErrorReporter] = None):
         self.current = 0
         self.tokens = tokens or []
+        self.error_reporter = error_reporter or ErrorReporter()
 
     def parse(self) -> Optional[Expr]:
         try:
@@ -133,7 +134,7 @@ class Parser:
         # Return instead of raising so the caller can decide
         # whether to bomb out or attempt to recover and parse more.
         # https://craftinginterpreters.com/parsing-expressions.html#entering-panic-mode
-        token_error(token, message)
+        self.error_reporter.token_error(token, message)
         return ParseError()
 
     def synchronize(self):

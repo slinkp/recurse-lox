@@ -1,21 +1,20 @@
+from typing import Optional
 from .expression import ASTVisitor
 from .expression import Expr, Binary, Grouping, Literal, Unary
 from .tokentype import TokenType
-from . import error
+from .error import ErrorReporter, LoxRuntimeError
 
 class Interpreter(ASTVisitor):
 
-    def interpret(self, expression: Expr) -> bool:
-        # Unlike book, I return bool if runtime error.
-        # That's because I put my error handling in its own module and don't want
-        # this to be calling methods of my main script
+    def __init__(self, error_reporter: Optional[ErrorReporter] = None):
+        self.error_reporter = error_reporter or ErrorReporter()
+
+    def interpret(self, expression: Expr):
         try:
             value = self.evaluate(expression)
             print(self.stringify(value))
-            return False
-        except error.LoxRuntimeError as _error:
-            error.runtime_error(_error)
-            return True
+        except LoxRuntimeError as _error:
+            self.error_reporter.runtime_error(_error)
 
     def stringify(self, value):
         if value is None:
@@ -83,7 +82,7 @@ class Interpreter(ASTVisitor):
             elif isinstance(left, str) and isinstance(right, str):
                 return left + right
             else:
-                raise error.LoxRuntimeError("Operands must be two numbers or two strings.", expr.operator)
+                raise LoxRuntimeError("Operands must be two numbers or two strings.", expr.operator)
         elif ttype == TokenType.SLASH:
             self._check_number_operands(expr.operator, left, right)
             return float(left) / float(right)
@@ -116,9 +115,9 @@ class Interpreter(ASTVisitor):
     def _check_number_operand(self, operator, operand):
         if isinstance(operand, float):
             return
-        raise error.LoxRuntimeError("Operand must be a number.", operator)
+        raise LoxRuntimeError("Operand must be a number.", operator)
 
     def _check_number_operands(self, operator, left, right):
         if isinstance(left, float) and isinstance(right, float):
             return
-        raise error.LoxRuntimeError("Operands must be numbers.", operator)
+        raise LoxRuntimeError("Operands must be numbers.", operator)

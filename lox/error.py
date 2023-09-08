@@ -7,21 +7,31 @@ class LoxRuntimeError(RuntimeError):
         super().__init__(str(message))
         self.token = token
 
-def error(line: int, message: str):
-    report(line, "", message)
+class ErrorReporter:
+    def __init__(self):
+        self.had_error = False
+        self.had_runtime_error = False
 
-def report(line: int, where: str, message: str):
-    print(
-        "[line %s] Error %s: %s" % (line, where, message),
-        file=sys.stderr)
+    def reset(self):
+        self.had_error = False
 
-def token_error(token, message: str):
-    if token.tokentype == TokenType.EOF:
-        report(token.line, " at end", message)
-    else:
-        report(token.line, " at '%s'"  % token.lexeme, message)
+    def error(self, line: int, message: str):
+        self.report(line, "", message)
 
-def runtime_error(error: LoxRuntimeError):
-    print(
-        "%s\n[line %s]" % (error, error.token.line),
-        file=sys.stderr)
+    def report(self, line: int, where: str, message: str):
+        self.had_error = True
+        print(
+            "[line %s] Error %s: %s" % (line, where, message),
+            file=sys.stderr)
+
+    def token_error(self, token, message: str):
+        if token.tokentype == TokenType.EOF:
+            self.report(token.line, " at end", message)
+        else:
+            self.report(token.line, " at '%s'"  % token.lexeme, message)
+
+    def runtime_error(self, error: LoxRuntimeError):
+        self.had_runtime_error = True
+        print(
+            "%s\n[line %s]" % (error, error.token.line),
+            file=sys.stderr)
