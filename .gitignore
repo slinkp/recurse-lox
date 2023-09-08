@@ -2,3 +2,4 @@ bin/
 lib/
 share/
 pyvenv.cfg
+.coverage
