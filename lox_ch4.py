@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import os
 
 from lox.scanner import Scanner
 from lox.parser import Parser
@@ -35,15 +36,8 @@ class Lox:
     def run(self, source: str):
         scanner = Scanner(source)
         tokens = scanner.scan_tokens()
-        # print(tokens)
-        parser = Parser(tokens)
-        expression = parser.parse()
-        if expression is None:
-            return
-        if self.had_error:
-            return
-        print(ASTPrinter().print(expression))
-
+        for token in tokens:
+            print(str(token))
 
 if __name__ == '__main__':
     Lox().main(sys.argv[1:])

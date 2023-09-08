@@ -18,8 +18,8 @@ class Tests(unittest.TestCase):
 
         self.assertEqual(
            [
-               Token(TokenType.VAR, "var", "var", 1),
-               Token(TokenType.IDENTIFIER, "foo", "foo", 1),
+               Token(TokenType.VAR, "var", None, 1),
+               Token(TokenType.IDENTIFIER, "foo", None, 1),
                self.semi,
                self.eof,
             ],

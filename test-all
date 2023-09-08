@@ -46,6 +46,9 @@ echo Coverage report...
 coverage report -m
 echo
 echo Dart tests...
+# Hack: retrofit custom output to make the ch4 tests happy
+dart test/test.dart chap04_scanning --interpreter ./lox_ch4.py
+STATUS=$(($? + $STATUS))
 dart test/test.dart chap06_parsing --interpreter ./lox.py
 STATUS=$(($? + $STATUS))
 

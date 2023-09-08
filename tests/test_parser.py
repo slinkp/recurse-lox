@@ -27,8 +27,8 @@ class Tests(unittest.TestCase):
     def test_simple_statement(self):
         # Equivalient to 'var foo = 1;'
         tokens = [
-            Token(TokenType.VAR, 'var', 'var'),
-            Token(TokenType.IDENTIFIER, 'foo', 'foo'),
+            Token(TokenType.VAR, 'var', None),
+            Token(TokenType.IDENTIFIER, 'foo', None),
             Token(TokenType.EQUAL, '=', None),
             Token(TokenType.NUMBER, '1', 1.0),
             Token(TokenType.SEMICOLON, ';', None),
@@ -41,7 +41,7 @@ class Tests(unittest.TestCase):
 
     def test_consume(self):
         tokens = [
-            Token(TokenType.VAR, 'var', 'var'),
+            Token(TokenType.VAR, 'var', None),
             Token(TokenType.EOF, '', None),
         ]
         parser = Parser(tokens)

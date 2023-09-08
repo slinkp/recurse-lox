@@ -33,10 +33,12 @@ class Token:
         self.line = line
 
     def __str__(self):
-        return "TokenType.%s, %r, %r" % (self.tokentype.name, self.lexeme, self.literal)
+        literal = "null" if self.literal is None else self.literal
+        return "%s %s %s" % (self.tokentype.name, self.lexeme, literal)
 
     def __repr__(self):
-        return "Token(%s)" % str(self)
+        fields = "TokenType.%s, %r, %r" % (self.tokentype.name, self.lexeme, self.literal)
+        return "Token(%s)" % fields
 
     def __eq__(self, other):
         if not isinstance(other, Token):
@@ -100,7 +102,7 @@ class Scanner:
         elif token_or_action is None:
             if c.isdigit():
                 self._handle_number()
-            elif c.isalpha():
+            elif self._is_alphanumeric(c):
                 self._handle_identifier()
             else:
                 self._handle_unexpected_char()
@@ -134,7 +136,7 @@ class Scanner:
         self.add_token(TokenType.BANG_EQUAL if self.match('=') else TokenType.BANG)
 
     def _handle_unexpected_char(self):
-        error.error(self.line, "Unexpected character: %s." % self.source[self.current])
+        error.error(self.line, "Unexpected character: %s" % self.source[self.current])
 
     def advance(self):
         c = self.source[self.current]
@@ -165,7 +167,7 @@ class Scanner:
     def add_token(self, tokentype, literal=None):
         text = self.source[self.start:self.current]
         self.tokens.append(
-            Token(tokentype, text, literal, self.line)
+            Token(tokentype, lexeme=text, literal=literal, line=self.line)
         )
 
     def _handle_string(self):
@@ -183,7 +185,7 @@ class Scanner:
 
         # Trim the surrounding quotes.
         value = self.source[self.start + 1: self.current - 1]
-        self.add_token(TokenType.STRING, value)
+        self.add_token(TokenType.STRING, literal=value)
 
     def _handle_number(self):
         while self.peek().isdigit() and not self._is_at_end():
@@ -195,13 +197,21 @@ class Scanner:
             while self.peek().isdigit() and not self._is_at_end():
                 self.advance()
         value = self.source[self.start:self.current]
-        self.add_token(TokenType.NUMBER, float(value))
+        self.add_token(TokenType.NUMBER, literal=float(value))
+
+    def _is_alphanumeric(self, c):
+        # Python has str.isalnum() but different semantics, so beware of that!
+        return ((c >= 'a' and c <= 'z') or
+                (c >= 'A' and c <= 'Z') or
+                c == '_' or
+                c.isdigit()
+                )
 
     def _handle_identifier(self):
-        while self.peek().isalnum():
+        while self._is_alphanumeric(self.peek()):
             # Consume as many letters/digits as possible.
             # Important not to tokenize eg `or` as OR when we have `orange` as IDENTIFIER.
             self.advance()
         value = self.source[self.start:self.current]
         tokentype = keywords.get(value, TokenType.IDENTIFIER)
-        self.add_token(tokentype, value)
+        self.add_token(tokentype, literal=None)
