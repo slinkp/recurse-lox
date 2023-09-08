@@ -122,7 +122,6 @@ class Scanner:
     def _handle_slash(self):
         if self.match('/'):
             # Comments go to end of line
-            print("Skipping comment")
             while self.peek() != '\n' and not self._is_at_end():
                 self.advance()
         else:

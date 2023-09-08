@@ -42,7 +42,7 @@ class Lox:
             return
         if self.had_error:
             return
-        print("Tree:", ASTPrinter().print(expression))
+        print(ASTPrinter().print(expression))
 
 
 if __name__ == '__main__':
