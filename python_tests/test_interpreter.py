@@ -1,5 +1,6 @@
 import unittest
 from lox.interpreter import Interpreter
+from lox.error import LoxRuntimeError
 
 class Tests(unittest.TestCase):
 
@@ -42,3 +43,10 @@ class Tests(unittest.TestCase):
             interpreter = Interpreter()
             result = interpreter.evaluate(expr)
             self.assertEqual(expected, result, "Unexpected result from code %r" % code)
+
+    def test_runtime_error(self):
+        code = 'nil + 23'
+        expr = self.get_expr(code)
+        interpreter = Interpreter()
+        with self.assertRaises(LoxRuntimeError):
+            result = interpreter.evaluate(expr)
