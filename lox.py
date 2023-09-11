@@ -50,12 +50,10 @@ class Lox:
         scanner = Scanner(source, error_reporter=self.error_reporter)
         tokens = scanner.scan_tokens()
         parser = Parser(tokens, error_reporter=self.error_reporter)
-        expression = parser.parse_expr()
-        if expression is None:
-            return
+        statements = parser.parse()
         if self.had_error:
             return
-        self.interpreter.interpret_ch7(expression)
+        self.interpreter.interpret(statements)
 
 
 if __name__ == '__main__':

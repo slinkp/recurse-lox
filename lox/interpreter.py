@@ -1,15 +1,24 @@
-from typing import Optional
-from .expression import ExprVisitor
-from .expression import Expr, Binary, Grouping, Literal, Unary
-from .tokentype import TokenType
-from .error import ErrorReporter, LoxRuntimeError
+from typing import Optional, List
 
-class Interpreter(ExprVisitor):
+from .error import ErrorReporter, LoxRuntimeError
+from .expression import Expr, Binary, Grouping, Literal, Unary
+from .expression import ExprVisitor
+from .statement import Stmt, StmtVisitor, ExpressionStmt, Print
+from .tokentype import TokenType
+
+class Interpreter(ExprVisitor, StmtVisitor):
 
     def __init__(self, error_reporter: Optional[ErrorReporter] = None):
         self.error_reporter = error_reporter or ErrorReporter()
 
-    def interpret(self, expression: Expr):
+    def interpret(self, statements: List[Stmt]):
+        try:
+            for statement in statements:
+                self.execute(statement)
+        except LoxRuntimeError as _error:
+            self.error_reporter.runtime_error(_error)
+
+    def interpret_ch7(self, expression: Expr):
         try:
             value = self.evaluate(expression)
             print(self.stringify(value))
@@ -29,6 +38,13 @@ class Interpreter(ExprVisitor):
         return str(value) # Hope this works for everything else :D
 
     # Implement all the necessary visitor methods
+
+    def visit_expression_stmt(self, stmt: ExpressionStmt):
+        self.evaluate(stmt.expression)
+
+    def visit_print_stmt(self, stmt: Print):
+        value = self.evaluate(stmt.expression)
+        print(self.stringify(value))
 
     def visit_literal_expr(self, expr: Literal) -> object:
         return expr.value
@@ -93,8 +109,12 @@ class Interpreter(ExprVisitor):
         # Supposedly unreachable.
         return None
 
+    def execute(self, statement: Stmt):
+        # Generic "visit any kind of statement"
+        statement.accept(self)
+
     def evaluate(self, expr: Expr):
-        # Generic "visit any kind of node"
+        # Generic "visit any kind of expression"
         return expr.accept(self)
 
     def _is_equal(self, a, b) -> bool:

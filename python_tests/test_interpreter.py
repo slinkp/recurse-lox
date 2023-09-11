@@ -11,8 +11,18 @@ class Tests(unittest.TestCase):
         scanner = Scanner(code)
         tokens = scanner.scan_tokens()
         parser = Parser(tokens)
-        expression = parser.parse()
+        expression = parser.parse_expr()
         return expression
+
+    def get_statements(self, code):
+        # Very lazily use other classes instead of building statements
+        from lox.parser import Parser
+        from lox.scanner  import Scanner
+        scanner = Scanner(code)
+        tokens = scanner.scan_tokens()
+        parser = Parser(tokens)
+        statements = parser.parse()
+        return statements
 
     def test_instantiation(self):
         Interpreter()
@@ -50,3 +60,10 @@ class Tests(unittest.TestCase):
         interpreter = Interpreter()
         with self.assertRaises(LoxRuntimeError):
             result = interpreter.evaluate(expr)
+
+    def test_evaluate_simple_statement(self):
+        code = '1 + 1;'
+        stmts = self.get_statements(code)
+        interpreter = Interpreter()
+        for stmt in stmts:
+            interpreter.execute(stmt)

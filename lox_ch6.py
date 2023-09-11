@@ -37,7 +37,7 @@ class Lox:
         tokens = scanner.scan_tokens()
         # print(tokens)
         parser = Parser(tokens)
-        expression = parser.parse()
+        expression = parser.parse_expr()
         if expression is None:
             return
         if self.had_error:

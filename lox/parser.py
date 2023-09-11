@@ -1,5 +1,6 @@
-from typing import Optional
+from typing import Optional, List
 from .expression import Expr, Binary, Unary, Literal, Grouping
+from .statement import Stmt, Print, ExpressionStmt
 from .tokentype import TokenType
 from .scanner import Token
 from .error import ErrorReporter
@@ -10,11 +11,37 @@ class Parser:
         self.tokens = tokens or []
         self.error_reporter = error_reporter or ErrorReporter()
 
-    def parse(self) -> Optional[Expr]:
+    def parse(self) -> List[Stmt]:
+        statements: List[Stmt] = []
+        while not self.is_at_end():
+            try:
+                statements.append(self.statement())
+            except ParseError:
+                pass # XXX
+        return statements
+
+    def parse_expr(self) -> Optional[Expr]:
+        # Legacy  method for chapters < 8
         try:
             return self.expression()
         except ParseError:
             return None
+
+    def statement(self) -> Stmt:
+        if self.match(TokenType.PRINT):
+            return self._print_statement()
+        else:
+            return self._expression_statement()
+
+    def _print_statement(self):
+        value = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return Print(value)
+
+    def _expression_statement(self):
+        expr = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        return ExpressionStmt(expr)
 
     def expression(self):
         return self.equality()

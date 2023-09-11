@@ -12,7 +12,7 @@ class Tests(unittest.TestCase):
     def test_empty_tokens(self):
         parser = Parser()
         self.assertEqual(
-            None, parser.parse()
+            None, parser.parse_expr()
             )
 
     def test_simple_literal_expr(self):
@@ -21,7 +21,7 @@ class Tests(unittest.TestCase):
             Token(TokenType.EOF, '', None),
         ]
         parser = Parser(tokens)
-        expr = parser.parse()
+        expr = parser.parse_expr()
         self.assertEqual(Literal(value=1.0), expr)
 
     def test_simple_statement(self):
@@ -36,7 +36,7 @@ class Tests(unittest.TestCase):
         ]
 
         parser = Parser(tokens)
-        expr = parser.parse()
+        expr = parser.parse_expr()
         self.assertEqual(None, expr)
 
     def test_consume(self):
