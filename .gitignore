@@ -4,3 +4,5 @@ share/
 pyvenv.cfg
 .coverage
 *pyc
+*py-e
+TAGS
