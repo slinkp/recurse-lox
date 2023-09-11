@@ -1,10 +1,10 @@
 from typing import Optional
-from .expression import ASTVisitor
+from .expression import ExprVisitor
 from .expression import Expr, Binary, Grouping, Literal, Unary
 from .tokentype import TokenType
 from .error import ErrorReporter, LoxRuntimeError
 
-class Interpreter(ASTVisitor):
+class Interpreter(ExprVisitor):
 
     def __init__(self, error_reporter: Optional[ErrorReporter] = None):
         self.error_reporter = error_reporter or ErrorReporter()

@@ -6,7 +6,7 @@ import abc
 class Expr(abc.ABC):
 
     @abc.abstractmethod
-    def accept(self, visitor: 'ASTVisitor'):
+    def accept(self, visitor: 'ExprVisitor'):
         pass
 
 
@@ -42,7 +42,7 @@ class Unary(Expr):
         return visitor.visit_unary_expr(self)
 
 
-class ASTVisitor(abc.ABC):
+class ExprVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_binary_expr(self, expr: Binary):
         pass
@@ -60,9 +60,9 @@ class ASTVisitor(abc.ABC):
         pass
 
 
-class ASTPrinter(ASTVisitor):
+class ASTPrinter(ExprVisitor):
     """
-    An ASTVisitor that prints the value of expression tree in a lisp-like style
+    An ExprVisitor that prints the value of expression tree in a lisp-like style
     (ie parenthesized with prefix operators).
     Useful for understanding the tree and that's all.
     """
