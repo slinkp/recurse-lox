@@ -38,27 +38,36 @@ STATUS=$?
 mypy lox.py
 STATUS=$(($? + $STATUS))
 
+rm -rf .coverage
+
 echo Python tests...
 coverage run -m unittest -v python_tests/test*py
 STATUS=$(($? + $STATUS))
-echo
-echo Coverage report...
-coverage report -m
 echo
 echo Dart tests...
 # Hack: retrofit custom output to make the ch4 tests happy
 
 echo "Chapter 4..."
-dart test/test.dart chap04_scanning --interpreter ./lox_ch4.py
+# Dart is a bit odd in that it requires prefacing EACH arg to the intepreter with '-a'.
+# So the actual command dart is running is like eg "bin/coverage run --append ./loc_ch4.py test/scanning/keywords.lox"
+dart test/test.dart chap04_scanning --interpreter ./bin/coverage -a run -a --append -a ./lox_ch4.py
 STATUS=$(($? + $STATUS))
+
 echo "Chapter 6..."
-dart test/test.dart chap06_parsing --interpreter ./lox_ch6.py
+dart test/test.dart chap06_parsing --interpreter  ./bin/coverage -a run -a --append -a ./lox_ch6.py
 STATUS=$(($? + $STATUS))
+
 echo "Chapter 7..."
-dart test/test.dart chap07_evaluating --interpreter ./lox.py
+dart test/test.dart chap07_evaluating --interpreter ./bin/coverage -a run -a --append -a ./lox.py
 STATUS=$(($? + $STATUS))
+
+echo Coverage report...
+coverage report -m
+echo
 
 if [ "$STATUS" -ne "0" ]; then
     shout "One or more steps reported failure."
+else
+    echo All passed
 fi
 exit $STATUS
