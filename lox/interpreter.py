@@ -3,7 +3,7 @@ from typing import Optional, List, Any
 from .error import ErrorReporter, LoxRuntimeError
 from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign
 from .expression import ExprVisitor
-from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var
+from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block
 from .tokentype import TokenType
 from .environment import Environment
 
@@ -66,6 +66,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if stmt.initializer is not None:
             value = self.evaluate(stmt.initializer)
         self._environment.define(stmt.name.lexeme, value)
+
+    def visit_block_stmt(self, stmt: Block):
+        self._execute_block(stmt.statements, Environment(enclosing=self._environment))
 
     ############################################################
     # ExprVisitor methods
@@ -168,3 +171,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if isinstance(left, float) and isinstance(right, float):
             return
         raise LoxRuntimeError("Operands must be numbers.", operator)
+
+    def _execute_block(self, statements: list[Stmt], environment: Environment):
+        previous_env = self._environment
+        try:
+            self._environment = environment
+            for statement in statements:
+                self.execute(statement)
+        finally:
+            self._environment = previous_env

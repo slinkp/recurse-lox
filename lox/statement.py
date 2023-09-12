@@ -27,6 +27,13 @@ class ExpressionStmt(Stmt):
 
 
 @dataclass
+class Block(Stmt):
+    statements: list[Stmt]
+
+    def accept(self, visitor: 'StmtVisitor'):
+        visitor.visit_block_stmt(self)
+
+@dataclass
 class Var(Stmt):
     name: Token
     initializer: Expr
@@ -37,13 +44,17 @@ class Var(Stmt):
 
 class StmtVisitor(abc.ABC):
     @abc.abstractmethod
-    def visit_print_stmt(self, expr: Print):
+    def visit_print_stmt(self, stmt: Print):
         pass
 
     @abc.abstractmethod
-    def visit_expression_stmt(self, expr: ExpressionStmt):
+    def visit_expression_stmt(self, stmt: ExpressionStmt):
         pass
 
     @abc.abstractmethod
-    def visit_var_stmt(self, expr: Var):
+    def visit_var_stmt(self, stmt: Var):
+        pass
+
+    @abc.abstractmethod
+    def visit_block_stmt(self, stmt: Block):
         pass

@@ -1,6 +1,6 @@
 from typing import Optional, List
 from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign
-from .statement import Stmt, Print, ExpressionStmt, Var
+from .statement import Stmt, Print, ExpressionStmt, Var, Block
 from .tokentype import TokenType
 from .scanner import Token
 from .error import ErrorReporter
@@ -38,6 +38,8 @@ class Parser:
     def statement(self) -> Stmt:
         if self.match(TokenType.PRINT):
             return self._print_statement()
+        elif self.match(TokenType.LEFT_BRACE):
+            return Block(self._block())
         else:
             return self._expression_statement()
 
@@ -58,6 +60,15 @@ class Parser:
             initializer = self.expression()
         self.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
         return Var(name, initializer)
+
+    def _block(self) -> list[Stmt]:
+        statements: list[Stmt] = []
+        while not self.check(TokenType.RIGHT_BRACE) and not self.is_at_end():
+            stmt = self.declaration()
+            if stmt is not None:
+                statements.append(stmt)
+        self.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.")
+        return statements
 
     def expression(self) -> Expr:
         # Most of the methods for handling expression types
