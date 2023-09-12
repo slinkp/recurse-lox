@@ -35,7 +35,7 @@ echo Type check...
 mypy -p lox
 STATUS=$?
 
-mypy lox.py
+mypy lox.py lox_*.py
 STATUS=$(($? + $STATUS))
 
 rm -rf .coverage

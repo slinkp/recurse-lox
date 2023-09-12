@@ -1,6 +1,6 @@
 from typing import Optional, List
-from .expression import Expr, Binary, Unary, Literal, Grouping
-from .statement import Stmt, Print, ExpressionStmt
+from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign
+from .statement import Stmt, Print, ExpressionStmt, Var
 from .tokentype import TokenType
 from .scanner import Token
 from .error import ErrorReporter
@@ -14,10 +14,9 @@ class Parser:
     def parse(self) -> List[Stmt]:
         statements: List[Stmt] = []
         while not self.is_at_end():
-            try:
-                statements.append(self.statement())
-            except ParseError:
-                pass # XXX
+            stmt = self.declaration()
+            if stmt is not None:
+                statements.append(stmt)
         return statements
 
     def parse_expr(self) -> Optional[Expr]:
@@ -25,6 +24,15 @@ class Parser:
         try:
             return self.expression()
         except ParseError:
+            return None
+
+    def declaration(self) -> Optional[Stmt]:
+        try:
+            if self.match(TokenType.VAR):
+                return self._var_declaration()
+            return self.statement()
+        except ParseError:
+            self.synchronize()
             return None
 
     def statement(self) -> Stmt:
@@ -43,8 +51,41 @@ class Parser:
         self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
         return ExpressionStmt(expr)
 
-    def expression(self):
-        return self.equality()
+    def _var_declaration(self):
+        name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
+        initializer = None
+        if self.match(TokenType.EQUAL):
+            initializer = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
+        return Var(name, initializer)
+
+    def expression(self) -> Expr:
+        # Most of the methods for handling expression types
+        # delegate to other expression types.
+        # This mirrors the grammar as defined in the book
+        # in appendix I (https://craftinginterpreters.com/appendix-i.html)
+        # eg:
+        # expression -> assignment ;
+        # assignment -> ... IDENTIFIER "=" assignment | logic_or ;
+        # logic_or -> ... etc etc
+        return self.assignment()
+
+    def assignment(self) -> Expr:
+        # https://craftinginterpreters.com/statements-and-state.html#assignment-syntax
+        expr: Expr = self.equality()
+        if self.match(TokenType.EQUAL):
+            equals: Token = self.previous()
+            # Since assignment is right-associative, we recursively call
+            # assignment() to parse the right-hand side.
+            value: Expr = self.assignment()
+            if isinstance(expr, Variable):
+                name_token: Token = expr.name
+                return Assign(name_token, value)
+            else:
+                # We'll support more complex expressions later
+                # (anythign that evaluates to an assignable reference).
+                self.error(equals, "Invalid assignment target.")
+        return expr
 
     def equality(self) -> Expr:
         # Rule:
@@ -108,6 +149,9 @@ class Parser:
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self.previous().literal)
 
+        if self.match(TokenType.IDENTIFIER):
+            return Variable(self.previous())
+
         if self.match(TokenType.LEFT_PAREN):
             expr = self.expression()
             self.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression")
@@ -169,7 +213,7 @@ class Parser:
         # This is for recovering from parse errors and then continuing parsing.
         self.advance()
         while not self.is_at_end():
-            if self.previous().type == TokenType.SEMICOLON:
+            if self.previous().tokentype == TokenType.SEMICOLON:
                 return
             elif self.peek().tokentype in (
                     TokenType.FUN,

@@ -1,15 +1,17 @@
-from typing import Optional, List
+from typing import Optional, List, Any
 
 from .error import ErrorReporter, LoxRuntimeError
-from .expression import Expr, Binary, Grouping, Literal, Unary
+from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign
 from .expression import ExprVisitor
-from .statement import Stmt, StmtVisitor, ExpressionStmt, Print
+from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var
 from .tokentype import TokenType
+from .environment import Environment
 
 class Interpreter(ExprVisitor, StmtVisitor):
 
     def __init__(self, error_reporter: Optional[ErrorReporter] = None):
         self.error_reporter = error_reporter or ErrorReporter()
+        self._environment = Environment()
 
     def interpret(self, statements: List[Stmt]):
         try:
@@ -37,7 +39,18 @@ class Interpreter(ExprVisitor, StmtVisitor):
             return text
         return str(value) # Hope this works for everything else :D
 
+    def execute(self, statement: Stmt):
+        # Generic "visit any kind of statement"
+        statement.accept(self)
+
+    def evaluate(self, expr: Expr):
+        # Generic "visit any kind of expression"
+        return expr.accept(self)
+
     # Implement all the necessary visitor methods
+
+    ############################################################
+    # StmtVisitor methods
 
     def visit_expression_stmt(self, stmt: ExpressionStmt):
         self.evaluate(stmt.expression)
@@ -45,6 +58,17 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def visit_print_stmt(self, stmt: Print):
         value = self.evaluate(stmt.expression)
         print(self.stringify(value))
+
+    def visit_var_stmt(self, stmt: Var):
+        # Un-initialized variables are None by default.
+        # https://craftinginterpreters.com/statements-and-state.html#interpreting-global-variables
+        value = None
+        if stmt.initializer is not None:
+            value = self.evaluate(stmt.initializer)
+        self._environment.define(stmt.name.lexeme, value)
+
+    ############################################################
+    # ExprVisitor methods
 
     def visit_literal_expr(self, expr: Literal) -> object:
         return expr.value
@@ -109,13 +133,16 @@ class Interpreter(ExprVisitor, StmtVisitor):
         # Supposedly unreachable.
         return None
 
-    def execute(self, statement: Stmt):
-        # Generic "visit any kind of statement"
-        statement.accept(self)
+    def visit_variable_expr(self, expr: Variable):
+        return self._environment.get(expr.name)
 
-    def evaluate(self, expr: Expr):
-        # Generic "visit any kind of expression"
-        return expr.accept(self)
+    def visit_assign_expr(self, expr: Assign) -> Any:
+        value: Any = self.evaluate(expr.value)
+        self._environment.assign(expr.name, value)
+        return value
+
+    ############################################################
+    # Helpers
 
     def _is_equal(self, a, b) -> bool:
         if a is None and b is None:

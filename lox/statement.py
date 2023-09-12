@@ -26,6 +26,15 @@ class ExpressionStmt(Stmt):
         visitor.visit_expression_stmt(self)
 
 
+@dataclass
+class Var(Stmt):
+    name: Token
+    initializer: Expr
+
+    def accept(self, visitor: 'StmtVisitor'):
+        visitor.visit_var_stmt(self)
+
+
 class StmtVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_print_stmt(self, expr: Print):
@@ -33,4 +42,8 @@ class StmtVisitor(abc.ABC):
 
     @abc.abstractmethod
     def visit_expression_stmt(self, expr: ExpressionStmt):
+        pass
+
+    @abc.abstractmethod
+    def visit_var_stmt(self, expr: Var):
         pass
