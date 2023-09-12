@@ -37,6 +37,8 @@ class Interpreter(ExprVisitor, StmtVisitor):
             if text.endswith('.0'):
                 text = text[:-2]
             return text
+        if isinstance(value, bool):
+            return str(value).lower()
         return str(value) # Hope this works for everything else :D
 
     def execute(self, statement: Stmt):
@@ -151,6 +153,11 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if a is None and b is None:
             return True
         if a is None:
+            return False
+        # Booleans: be careful not to return true for `false == 0`
+        if isinstance(a, bool) and not isinstance(b, bool):
+            return False
+        if isinstance(b, bool) and not isinstance(a, bool):
             return False
         return a == b
 

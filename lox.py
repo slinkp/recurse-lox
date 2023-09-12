@@ -20,6 +20,7 @@ class Lox:
     def had_runtime_error(self):
         return self.error_reporter.had_runtime_error
 
+    @property
     def had_any_error(self):
         return self.had_error or self.had_runtime_error
 
@@ -35,7 +36,9 @@ class Lox:
     def run_file(self, path: str):
         _bytes = open(path, 'r').read()
         self.run(_bytes)
-        if self.had_any_error():
+        if self.had_runtime_error:
+            sys.exit(70)
+        elif self.had_any_error:
             sys.exit(65)
 
     def run_prompt(self):

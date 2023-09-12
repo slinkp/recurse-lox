@@ -21,14 +21,14 @@ class ErrorReporter:
     def report(self, line: int, where: str, message: str):
         self.had_error = True
         print(
-            "[line %s] Error %s: %s" % (line, where, message),
+            "[%s] Error %s: %s" % (line, where, message),
             file=sys.stderr)
 
     def token_error(self, token, message: str):
         if token.tokentype == TokenType.EOF:
-            self.report(token.line, " at end", message)
+            self.report(token.line, "at end", message)
         else:
-            self.report(token.line, " at '%s'"  % token.lexeme, message)
+            self.report(token.line, "at '%s'"  % token.lexeme, message)
 
     def runtime_error(self, error: LoxRuntimeError):
         self.had_runtime_error = True
