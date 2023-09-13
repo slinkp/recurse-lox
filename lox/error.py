@@ -20,8 +20,11 @@ class ErrorReporter:
 
     def report(self, line: int, where: str, message: str):
         self.had_error = True
+        header = "Error"
+        if where:
+            header += " " + where
         print(
-            "[%s] Error %s: %s" % (line, where, message),
+            "[line %s] %s: %s" % (line, header, message),
             file=sys.stderr)
 
     def token_error(self, token, message: str):
