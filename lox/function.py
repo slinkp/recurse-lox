@@ -8,10 +8,11 @@ class LoxFunction(LoxCallable):
     # https://craftinginterpreters.com/functions.html#function-objects
 
     declaration: statement.Function
+    closure: Environment
 
     def call(self, interpreter, arguments: list):
         # Bind the params into names in the local environment.
-        environment = Environment(interpreter.globals)
+        environment = Environment(self.closure)
         for i, param in enumerate(self.declaration.parameters):
             environment.define(param.lexeme, arguments[i])
 
