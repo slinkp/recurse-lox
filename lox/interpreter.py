@@ -1,7 +1,7 @@
 from typing import Optional, List, Any
 
 from .error import ErrorReporter, LoxRuntimeError
-from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign
+from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign, Logical
 from .expression import ExprVisitor
 from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If
 from .tokentype import TokenType
@@ -155,6 +155,18 @@ class Interpreter(ExprVisitor, StmtVisitor):
         value: Any = self.evaluate(expr.value)
         self._environment.assign(expr.name, value)
         return value
+
+    def visit_logical_expr(self, expr: Logical) -> Any:
+        # Supports 'and', 'or'
+        left_val = self.evaluate(expr.left)
+        if self._is_truthy(left_val):
+            if expr.operator.tokentype == TokenType.OR:
+                return left_val
+        elif expr.operator.tokentype == TokenType.AND:
+            return left_val
+        right_val = self.evaluate(expr.right)
+        return right_val
+
 
     ############################################################
     # Helpers

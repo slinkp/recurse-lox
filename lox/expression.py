@@ -60,6 +60,14 @@ class Variable(Expr):
     def accept(self, visitor):
         return visitor.visit_variable_expr(self)
 
+@dataclass
+class Logical(Expr):
+    left: Expr
+    operator: Token
+    right: Expr
+
+    def accept(self, visitor):
+        return visitor.visit_logical_expr(self)
 
 class ExprVisitor(abc.ABC):
     @abc.abstractmethod
@@ -86,6 +94,10 @@ class ExprVisitor(abc.ABC):
     def visit_assign_expr(self, expr: Assign) -> Any:
         pass
 
+    @abc.abstractmethod
+    def visit_logical_expr(self, expr: Logical):
+        pass
+
 class ASTPrinter(ExprVisitor):
     """
     An ExprVisitor that prints the value of expression tree in a lisp-like style
@@ -97,10 +109,10 @@ class ASTPrinter(ExprVisitor):
         return expr.accept(self) or ""
 
     def visit_binary_expr(self, expr: Binary):
-        return self.parenthesize(expr.operator.lexeme, expr.left, expr.right)
+        return self._parenthesize(expr.operator.lexeme, expr.left, expr.right)
 
     def visit_grouping_expr(self, expr: Grouping):
-        return self.parenthesize("group", expr.expression)
+        return self._parenthesize("group", expr.expression)
 
     def visit_literal_expr(self, expr: Literal):
         if expr.value is None:
@@ -108,16 +120,19 @@ class ASTPrinter(ExprVisitor):
         return str(expr.value)
 
     def visit_unary_expr(self, expr: Unary):
-        return self.parenthesize(expr.operator.lexeme, expr.right)
+        return self._parenthesize(expr.operator.lexeme, expr.right)
 
     def visit_variable_expr(self, expr: Variable):
         return expr.name.lexeme  # Is that all??
 
     def visit_assign_expr(self, expr: Assign):
         # Like C, and unlike Python, assignment is an expression, not a statement.
-        return self.parenthesize("assign %s" % expr.name.lexeme, expr.value)
+        return self._parenthesize("assign %s" % expr.name.lexeme, expr.value)
 
-    def parenthesize(self, name, *exprs: Expr):
+    def visit_logical_expr(self, expr: Logical):
+        return self._parenthesize(expr.operator.lexeme, expr.left, expr.right)
+
+    def _parenthesize(self, name, *exprs: Expr):
         strings = ' '.join(expr.accept(self) or "" for expr in exprs)
         return "(%s %s)" % (name, strings)
 

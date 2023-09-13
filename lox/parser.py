@@ -1,5 +1,5 @@
 from typing import Optional, List
-from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign
+from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical
 from .statement import Stmt, Print, ExpressionStmt, Var, Block, If
 from .tokentype import TokenType
 from .scanner import Token
@@ -96,7 +96,7 @@ class Parser:
 
     def assignment(self) -> Expr:
         # https://craftinginterpreters.com/statements-and-state.html#assignment-syntax
-        expr: Expr = self.equality()
+        expr: Expr = self.or_()
         if self.match(TokenType.EQUAL):
             equals: Token = self.previous()
             # Since assignment is right-associative, we recursively call
@@ -109,6 +109,22 @@ class Parser:
                 # We'll support more complex expressions later
                 # (anythign that evaluates to an assignable reference).
                 self.error(equals, "Invalid assignment target.")
+        return expr
+
+    def or_(self) -> Expr:
+        expr: Expr = self.and_()
+        while (self.match(TokenType.OR)):
+            operator = self.previous()
+            right = self.and_()  # Why is this and()?
+            expr = Logical(expr, operator, right)
+        return expr
+
+    def and_(self) -> Expr:
+        expr: Expr = self.equality()
+        while (self.match(TokenType.AND)):
+            operator = self.previous()
+            right = self.equality()
+            expr = Logical(expr, operator, right)
         return expr
 
     def equality(self) -> Expr:
