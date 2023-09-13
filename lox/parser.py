@@ -5,6 +5,9 @@ from .tokentype import TokenType
 from .scanner import Token
 from .error import ErrorReporter
 
+
+MAX_ARGS = 255
+
 class Parser:
     def __init__(self, tokens: Optional[list[Token]] = None, error_reporter: Optional[ErrorReporter] = None):
         self.current = 0
@@ -46,8 +49,8 @@ class Parser:
         parameters: List[Token] = []
         if not self.check(TokenType.RIGHT_PAREN):
             while True:
-                if len(parameters) >= 255:
-                    self.error(self.peek(), "Can't have more than 255 parameters.")
+                if len(parameters) >= MAX_ARGS:
+                    self.error(self.peek(), "Can't have more than %d parameters." % MAX_ARGS)
                 parameters.append(
                     self.consume(TokenType.IDENTIFIER, "Expect parameter name.")
                 )
@@ -282,8 +285,8 @@ class Parser:
         arguments: list[Expr] = []
         if not self.check(TokenType.RIGHT_PAREN):
             while True:
-                if len(arguments) >= 255:
-                    self.error(self.peek(), "Can't have more than 255 arguments.")
+                if len(arguments) >= MAX_ARGS:
+                    self.error(self.peek(), "Can't have more than %d arguments." % MAX_ARGS)
                 arguments.append(self.expression())
                 if not self.match(TokenType.COMMA):
                     break
