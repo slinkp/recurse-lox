@@ -3,7 +3,7 @@ from typing import Optional, List, Any
 from .error import ErrorReporter, LoxRuntimeError
 from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign
 from .expression import ExprVisitor
-from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block
+from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If
 from .tokentype import TokenType
 from .environment import Environment
 
@@ -72,6 +72,14 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def visit_block_stmt(self, stmt: Block):
         self._execute_block(stmt.statements, Environment(enclosing=self._environment))
 
+    def visit_if_stmt(self, stmt: If):
+        condition = self.evaluate(stmt.condition)
+        if self._is_truthy(condition):
+            self.execute(stmt.then_branch)
+        else:
+            if stmt.else_branch is not None:
+                self.execute(stmt.else_branch)
+
     ############################################################
     # ExprVisitor methods
 
@@ -102,6 +110,8 @@ class Interpreter(ExprVisitor, StmtVisitor):
         right = self.evaluate(expr.right)
 
         ttype = expr.operator.tokentype
+        # We could turn this into a dict that dispatches to callables,
+        # but I don't feel like defining all those methods and I don't like lambdas :-p
         if ttype == TokenType.EQUAL_EQUAL:
             return self._is_equal(left, right)
         elif ttype == TokenType.BANG_EQUAL:

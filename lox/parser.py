@@ -1,6 +1,6 @@
 from typing import Optional, List
 from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign
-from .statement import Stmt, Print, ExpressionStmt, Var, Block
+from .statement import Stmt, Print, ExpressionStmt, Var, Block, If
 from .tokentype import TokenType
 from .scanner import Token
 from .error import ErrorReporter
@@ -36,6 +36,8 @@ class Parser:
             return None
 
     def statement(self) -> Stmt:
+        if self.match(TokenType.IF):
+            return self._if_statement()
         if self.match(TokenType.PRINT):
             return self._print_statement()
         elif self.match(TokenType.LEFT_BRACE):
@@ -43,17 +45,28 @@ class Parser:
         else:
             return self._expression_statement()
 
-    def _print_statement(self):
+    def _print_statement(self) -> Print:
         value = self.expression()
         self.consume(TokenType.SEMICOLON, "Expect ';' after value.")
         return Print(value)
 
-    def _expression_statement(self):
+    def _expression_statement(self) -> ExpressionStmt:
         expr = self.expression()
         self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
         return ExpressionStmt(expr)
 
-    def _var_declaration(self):
+    def _if_statement(self) -> If:
+        # -> "if" "(" expression ")" statement ( "else" statement )? ;
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
+        condition: Expr = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.")
+        then_branch: Stmt = self.statement()
+        else_branch: Optional[Stmt] = None
+        if self.match(TokenType.ELSE):
+            else_branch = self.statement()
+        return If(condition, then_branch, else_branch)
+
+    def _var_declaration(self) -> Var:
         name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
         initializer = None
         if self.match(TokenType.EQUAL):

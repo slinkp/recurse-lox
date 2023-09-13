@@ -1,8 +1,10 @@
 from dataclasses import dataclass
+from typing import Optional
+import abc
+
 from .scanner import Token
 from .expression import Expr
 
-import abc
 
 
 class Stmt(abc.ABC):
@@ -36,11 +38,20 @@ class Block(Stmt):
 @dataclass
 class Var(Stmt):
     name: Token
-    initializer: Expr
+    initializer: Optional[Expr]
 
     def accept(self, visitor: 'StmtVisitor'):
         visitor.visit_var_stmt(self)
 
+
+@dataclass
+class If(Stmt):
+    condition: Expr
+    then_branch: Stmt
+    else_branch: Optional[Stmt]
+
+    def accept(self, visitor: 'StmtVisitor'):
+        visitor.visit_if_stmt(self)
 
 class StmtVisitor(abc.ABC):
     @abc.abstractmethod
@@ -57,4 +68,8 @@ class StmtVisitor(abc.ABC):
 
     @abc.abstractmethod
     def visit_block_stmt(self, stmt: Block):
+        pass
+
+    @abc.abstractmethod
+    def visit_if_stmt(self, stmt: If):
         pass
