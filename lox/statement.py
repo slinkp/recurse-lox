@@ -72,6 +72,15 @@ class Function(Stmt):
         visitor.visit_function_statement(self)
 
 
+@dataclass
+class Return(Stmt):
+    keyword: Token  # the `return` itself, for error reporting.
+    value: Expr
+
+    def accept(self, visitor: 'StmtVisitor'):
+        visitor.visit_return_stmt(self)
+
+
 class StmtVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_print_stmt(self, stmt: Print):
@@ -99,4 +108,8 @@ class StmtVisitor(abc.ABC):
 
     @abc.abstractmethod
     def visit_function_statement(self, stmt: Function):
+        pass
+
+    @abc.abstractmethod
+    def visit_return_stmt(self, stmt: Return):
         pass

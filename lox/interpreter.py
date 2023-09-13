@@ -3,10 +3,10 @@ from typing import Optional, List, Any
 from .error import ErrorReporter, LoxRuntimeError
 from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign, Logical, Call
 from .expression import ExprVisitor
-from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While, Function
+from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While, Function, Return
 from .tokentype import TokenType
 from .environment import Environment
-from .lox_callable import LoxCallable
+from .lox_callable import LoxCallable, StupidReturnException
 from .function import LoxFunction
 from . import native_functions
 
@@ -103,6 +103,14 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def visit_function_statement(self, stmt: Function):
         func = LoxFunction(stmt)
         self._environment.define(stmt.name.lexeme, func)
+
+    def visit_return_stmt(self, stmt: Return):
+        # https://craftinginterpreters.com/functions.html#returning-from-calls
+        # Question: Is there any reasonable way of doing this without abusing exceptions?
+        value = None
+        if stmt.value is not None:
+            value = self.evaluate(stmt.value)
+        raise StupidReturnException(value)
 
     ############################################################
     # ExprVisitor methods

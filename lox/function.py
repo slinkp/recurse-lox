@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from .lox_callable import LoxCallable
+from .lox_callable import LoxCallable, StupidReturnException
 from . import statement
 from .environment import Environment
 
@@ -15,7 +15,10 @@ class LoxFunction(LoxCallable):
         for i, param in enumerate(self.declaration.parameters):
             environment.define(param.lexeme, arguments[i])
 
-        interpreter.execute_block(self.declaration.body, environment)
+        try:
+            interpreter.execute_block(self.declaration.body, environment)
+        except StupidReturnException as e:
+            return e.value
 
     def arity(self):
         return len(self.declaration.parameters)
