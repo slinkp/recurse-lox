@@ -62,7 +62,7 @@ dart test/test.dart chap07_evaluating --interpreter ./bin/coverage -a run -a --a
 STATUS=$(($? + $STATUS))
 
 echo "Chapter 8..."
-dart test/test.dart chap08_statements --interpreter ./bin/coverage -a run -a --append -a ./lox.py
+dart test/test.dart chap08_statements --interpreter ./bin/coverage -a run -a --append -a ./lox_ch8.py
 STATUS=$(($? + $STATUS))
 
 echo Coverage report...
