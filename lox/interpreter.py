@@ -3,7 +3,7 @@ from typing import Optional, List, Any
 from .error import ErrorReporter, LoxRuntimeError
 from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign, Logical
 from .expression import ExprVisitor
-from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If
+from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While
 from .tokentype import TokenType
 from .environment import Environment
 
@@ -79,6 +79,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
         else:
             if stmt.else_branch is not None:
                 self.execute(stmt.else_branch)
+
+    def visit_while_stmt(self, stmt: While):
+        while self.evaluate(stmt.condition):
+            self.execute(stmt.statement)
 
     ############################################################
     # ExprVisitor methods

@@ -1,6 +1,6 @@
 from typing import Optional, List
 from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical
-from .statement import Stmt, Print, ExpressionStmt, Var, Block, If
+from .statement import Stmt, Print, ExpressionStmt, Var, Block, If, While
 from .tokentype import TokenType
 from .scanner import Token
 from .error import ErrorReporter
@@ -38,7 +38,9 @@ class Parser:
     def statement(self) -> Stmt:
         if self.match(TokenType.IF):
             return self._if_statement()
-        if self.match(TokenType.PRINT):
+        elif self.match(TokenType.WHILE):
+            return self._while_statement()
+        elif self.match(TokenType.PRINT):
             return self._print_statement()
         elif self.match(TokenType.LEFT_BRACE):
             return Block(self._block())
@@ -65,6 +67,14 @@ class Parser:
         if self.match(TokenType.ELSE):
             else_branch = self.statement()
         return If(condition, then_branch, else_branch)
+
+    def _while_statement(self) -> While:
+        # -> "while" "(" expression ")" statement;
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.")
+        condition: Expr = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after while condition.")
+        statement: Stmt = self.statement()
+        return While(condition, statement)
 
     def _var_declaration(self) -> Var:
         name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
