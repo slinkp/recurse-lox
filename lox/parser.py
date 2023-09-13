@@ -38,6 +38,8 @@ class Parser:
     def statement(self) -> Stmt:
         if self.match(TokenType.IF):
             return self._if_statement()
+        elif self.match(TokenType.FOR):
+            return self._for_statement()
         elif self.match(TokenType.WHILE):
             return self._while_statement()
         elif self.match(TokenType.PRINT):
@@ -75,6 +77,50 @@ class Parser:
         self.consume(TokenType.RIGHT_PAREN, "Expect ')' after while condition.")
         statement: Stmt = self.statement()
         return While(condition, statement)
+
+    def _for_statement(self) -> Stmt:
+        # "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.")
+        initializer: Optional[Stmt] = None
+        if (self.match(TokenType.SEMICOLON)):
+            initializer = None
+        elif (self.match(TokenType.VAR)):
+            initializer = self._var_declaration()
+        else:
+            initializer = self._expression_statement()
+
+        condition: Optional[Expr] = None
+        if not (self.check(TokenType.SEMICOLON)):
+            condition = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.")
+
+        increment: Optional[Expr] = None
+        if not (self.check(TokenType.RIGHT_PAREN)):
+            increment = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.")
+
+        body: Stmt = self.statement()
+
+        ######################################################################
+        # De-sugaring!
+        # https://craftinginterpreters.com/control-flow.html#desugaring
+        ######################################################################
+
+        if increment is not None:
+            # The increment expression just runs after every time we do the body,
+            # so combine them into a block.
+            body = Block([body, ExpressionStmt(increment)])
+
+        # You can always express 'for' as an equivalent 'while'.
+        if condition is None:
+            condition = Literal(True)
+        body = While(condition, body)
+
+        # SHove the whole thing into a block that does the initialization first.
+        if initializer is not None:
+            body = Block([initializer, body])
+
+        return body
 
     def _var_declaration(self) -> Var:
         name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")

@@ -6,7 +6,6 @@ from .scanner import Token
 from .expression import Expr
 
 
-
 class Stmt(abc.ABC):
 
     @abc.abstractmethod

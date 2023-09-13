@@ -81,6 +81,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 self.execute(stmt.else_branch)
 
     def visit_while_stmt(self, stmt: While):
+        # Thanks to de-sugaring, this also handles For loops
         while self.evaluate(stmt.condition):
             self.execute(stmt.statement)
 
