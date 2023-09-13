@@ -281,12 +281,12 @@ class Parser:
     def _finish_call(self, callee: Expr) -> Call:
         arguments: list[Expr] = []
         if not self.check(TokenType.RIGHT_PAREN):
-            more_args = True
-            while more_args:
-                arguments.append(self.expression())
-                more_args = self.match(TokenType.COMMA)
+            while True:
                 if len(arguments) >= 255:
                     self.error(self.peek(), "Can't have more than 255 arguments.")
+                arguments.append(self.expression())
+                if not self.match(TokenType.COMMA):
+                    break
 
         paren = self.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
         return Call(callee, paren, arguments)
