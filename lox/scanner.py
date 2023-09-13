@@ -114,7 +114,7 @@ class Scanner:
         self.add_token(TokenType.BANG_EQUAL if self.match('=') else TokenType.BANG)
 
     def _handle_unexpected_char(self):
-        self.error_reporter.error(self.line, "Unexpected character: %s" % self.source[self.current])
+        self.error_reporter.error(self.line, "Unexpected character.") #: %s" % self.source[self.current])
 
     def advance(self):
         c = self.source[self.current]
