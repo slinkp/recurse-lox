@@ -1,6 +1,6 @@
 import abc
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, List
 
 from .scanner import Token
 
@@ -69,6 +69,18 @@ class Logical(Expr):
     def accept(self, visitor):
         return visitor.visit_logical_expr(self)
 
+
+@dataclass
+class Call(Expr):
+    # Expr callee, Token paren, List<Expr> arguments",
+    callee: Expr
+    paren: Token
+    arguments: List[Expr]
+
+    def accept(self, visitor):
+        return visitor.visit_call_expr(self)
+
+
 class ExprVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_binary_expr(self, expr: Binary):
@@ -97,6 +109,11 @@ class ExprVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_logical_expr(self, expr: Logical):
         pass
+
+    @abc.abstractmethod
+    def visit_call_expr(self, expr: Call):
+        pass
+
 
 class ASTPrinter(ExprVisitor):
     """
@@ -131,6 +148,10 @@ class ASTPrinter(ExprVisitor):
 
     def visit_logical_expr(self, expr: Logical):
         return self._parenthesize(expr.operator.lexeme, expr.left, expr.right)
+
+    def visit_call_expr(self, expr: Call):
+        # hmm, in lisp it's just (func-name arg...)
+        return self._parenthesize(expr.callee, *expr.arguments)
 
     def _parenthesize(self, name, *exprs: Expr):
         strings = ' '.join(expr.accept(self) or "" for expr in exprs)

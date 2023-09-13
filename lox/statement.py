@@ -62,6 +62,16 @@ class While(Stmt):
         visitor.visit_while_stmt(self)
 
 
+@dataclass
+class Function(Stmt):
+    name: Token
+    parameters: list[Token]
+    body: list[Stmt]
+
+    def accept(self, visitor: 'StmtVisitor'):
+        visitor.visit_function_statement(self)
+
+
 class StmtVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_print_stmt(self, stmt: Print):
@@ -85,4 +95,8 @@ class StmtVisitor(abc.ABC):
 
     @abc.abstractmethod
     def visit_while_stmt(self, stmt: While):
+        pass
+
+    @abc.abstractmethod
+    def visit_function_statement(self, stmt: Function):
         pass

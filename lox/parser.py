@@ -1,6 +1,6 @@
 from typing import Optional, List
-from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical
-from .statement import Stmt, Print, ExpressionStmt, Var, Block, If, While
+from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call
+from .statement import Stmt, Print, ExpressionStmt, Var, Block, If, While, Function
 from .tokentype import TokenType
 from .scanner import Token
 from .error import ErrorReporter
@@ -27,13 +27,37 @@ class Parser:
             return None
 
     def declaration(self) -> Optional[Stmt]:
+        # declaration > funDecl | varDecl | statement ;
+        # funDecl -> "fun" function ;
+        # function -> IDENTIFIER "(" parameters? ")" block ;
         try:
+            if self.match(TokenType.FUN):
+                return self._function("function")
             if self.match(TokenType.VAR):
                 return self._var_declaration()
             return self.statement()
         except ParseError:
             self.synchronize()
             return None
+
+    def _function(self, kind: str) -> Function:
+        name: Token = self.consume(TokenType.IDENTIFIER, "Expect %s name." % kind)
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after %s name." % kind)
+        parameters: List[Token] = []
+        if not self.check(TokenType.RIGHT_PAREN):
+            while True:
+                if len(parameters) >= 255:
+                    self.error(self.peek(), "Can't have more than 255 parameters.")
+                parameters.append(
+                    self.consume(TokenType.IDENTIFIER, "Expect parameter name.")
+                )
+                if not self.match(TokenType.COMMA):
+                    break
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
+
+        self.consume(TokenType.LEFT_BRACE, "Expect '{' before %s body." % kind)
+        body: List[Stmt] = self._block()
+        return Function(name, parameters, body)
 
     def statement(self) -> Stmt:
         if self.match(TokenType.IF):
@@ -224,14 +248,38 @@ class Parser:
         return expr
 
     def unary(self) -> Expr:
-        # ( "!" | "-" ) unary | primary ;
+        # unary -> ( "!" | "-" ) unary | call ;
 
         if self.match(TokenType.BANG, TokenType.MINUS):
             operator = self.previous()
             right = self.unary()
             return Unary(operator, right)
 
-        return self.primary()
+        return self.call()
+
+    def call(self) -> Expr:
+        # call -> primary ( "(" arguments? ")" )* ;
+        # arguments -> expression ( "," expression )* ;
+        expr: Expr = self.primary()
+        while True:
+            if self.match(TokenType.LEFT_PAREN):
+                expr = self._finish_call(expr)
+            else:
+                break
+        return expr
+
+    def _finish_call(self, callee: Expr) -> Call:
+        arguments: list[Expr] = []
+        if not self.check(TokenType.RIGHT_PAREN):
+            more_args = True
+            while more_args:
+                arguments.append(self.expression())
+                more_args = self.match(TokenType.COMMA)
+                if len(arguments) >= 255:
+                    self.error(self.peek(), "Can't have more than 255 arguments.")
+
+        paren = self.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
+        return Call(callee, paren, arguments)
 
     def primary(self) -> Expr:
         # NUMBER | STRING | "true" | "false" | "nil | "(" expression ")" ;

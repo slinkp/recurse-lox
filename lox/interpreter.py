@@ -1,17 +1,23 @@
 from typing import Optional, List, Any
 
 from .error import ErrorReporter, LoxRuntimeError
-from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign, Logical
+from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign, Logical, Call
 from .expression import ExprVisitor
-from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While
+from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While, Function
 from .tokentype import TokenType
 from .environment import Environment
+from .lox_callable import LoxCallable
+from .function import LoxFunction
+from . import native_functions
+
 
 class Interpreter(ExprVisitor, StmtVisitor):
 
     def __init__(self, error_reporter: Optional[ErrorReporter] = None):
         self.error_reporter = error_reporter or ErrorReporter()
         self._environment = Environment()
+        self.globals = self._environment
+        self.globals.define("clock", native_functions.Clock())
 
     def interpret(self, statements: List[Stmt]):
         try:
@@ -45,6 +51,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
         # Generic "visit any kind of statement"
         statement.accept(self)
 
+    def execute_block(self, statements: list[Stmt], environment: Environment):
+        previous_env = self._environment
+        try:
+            self._environment = environment
+            for statement in statements:
+                self.execute(statement)
+        finally:
+            self._environment = previous_env
+
     def evaluate(self, expr: Expr):
         # Generic "visit any kind of expression"
         return expr.accept(self)
@@ -70,7 +85,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self._environment.define(stmt.name.lexeme, value)
 
     def visit_block_stmt(self, stmt: Block):
-        self._execute_block(stmt.statements, Environment(enclosing=self._environment))
+        self.execute_block(stmt.statements, Environment(enclosing=self._environment))
 
     def visit_if_stmt(self, stmt: If):
         condition = self.evaluate(stmt.condition)
@@ -84,6 +99,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
         # Thanks to de-sugaring, this also handles For loops
         while self.evaluate(stmt.condition):
             self.execute(stmt.statement)
+
+    def visit_function_statement(self, stmt: Function):
+        func = LoxFunction(stmt)
+        self._environment.define(stmt.name.lexeme, func)
 
     ############################################################
     # ExprVisitor methods
@@ -172,6 +191,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
         right_val = self.evaluate(expr.right)
         return right_val
 
+    def visit_call_expr(self, expr: Call) -> Any:
+        # Might be a variable, or a callback, method reference ...
+        callee = self.evaluate(expr.callee)
+        if not isinstance(callee, LoxCallable):
+            raise LoxRuntimeError("Can only call functions and classes.", expr.paren)
+        args = [self.evaluate(arg) for arg in expr.arguments]
+        if len(args) != callee.arity():
+            raise LoxRuntimeError("Expected %d arguments but got %d." % (callee.arity(), len(args)), expr.paren)
+        return callee.call(self, args)
 
     ############################################################
     # Helpers
@@ -205,12 +233,3 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if isinstance(left, float) and isinstance(right, float):
             return
         raise LoxRuntimeError("Operands must be numbers.", operator)
-
-    def _execute_block(self, statements: list[Stmt], environment: Environment):
-        previous_env = self._environment
-        try:
-            self._environment = environment
-            for statement in statements:
-                self.execute(statement)
-        finally:
-            self._environment = previous_env
