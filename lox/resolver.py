@@ -17,6 +17,7 @@ class FunctionType(enum.Enum):
     NONE = 1
     FUNCTION = 2
     METHOD = 3
+    INITIALIZER = 4
 
 
 class ClassType(enum.Enum):
@@ -103,7 +104,8 @@ class Resolver(ExprVisitor, StmtVisitor):
         self._begin_scope() # Implicit scope for 'this'. Unclear why we don't use the existing one for the body?
         self.scopes[-1]["this"] = True
         for method in stmt.methods:
-            self._resolve_function(method, FunctionType.METHOD)
+            ftype = FunctionType.INITIALIZER if method.name.lexeme == "init" else FunctionType.METHOD
+            self._resolve_function(method, ftype)
         self._end_scope()
         self._current_class = _old_enclosing_class
 
@@ -182,6 +184,9 @@ class Resolver(ExprVisitor, StmtVisitor):
         if self._current_function == FunctionType.NONE:
             self.error_reporter.token_error(stmt.keyword, "Can't return from top-level code.")
         if stmt.value is not None:
+            if self._current_function == FunctionType.INITIALIZER:
+                # We only allow early empty return from `init` implicitly returning `this`
+                self.error_reporter.token_error(stmt.keyword, "Can't return a value from an initializer.")
             self.resolve_expr(stmt.value)
 
     def visit_while_stmt(self, stmt):

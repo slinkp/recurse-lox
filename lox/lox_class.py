@@ -16,10 +16,19 @@ class LoxClass(LoxCallable):
         return self.name
 
     def arity(self) -> int:
-        return 0
+        initializer = self.find_method("init")
+        if initializer is not None:
+            return initializer.arity()
+        else:
+            return 0
 
-    def call(self, interpreter, arguments: list[object]):
-        return LoxInstance(self)
+    def call(self, interpreter, arguments: list[object]) -> 'LoxInstance':
+        instance: LoxInstance = LoxInstance(self)
+        # We implicitly call `instance.init` with the args we got.
+        initializer = self.find_method("init")
+        if initializer is not None:
+            instance.bind(initializer).call(interpreter, arguments)
+        return instance
 
     def find_method(self, name: str) -> Optional[LoxFunction]:
         if name in self.methods:
@@ -55,4 +64,4 @@ class LoxInstance:
         # and b) prevents circular dependency between LoxFunction and LoxInstance
         env = Environment(method.closure)
         env.define("this", self)
-        return LoxFunction(method.declaration, env)
+        return LoxFunction(method.declaration, env, is_initializer=method.is_initializer)

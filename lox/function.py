@@ -9,6 +9,7 @@ class LoxFunction(LoxCallable):
 
     declaration: statement.Function
     closure: Environment
+    is_initializer: bool = False
 
     def call(self, interpreter, arguments: list):
         # Bind the params into names in the local environment.
@@ -16,10 +17,17 @@ class LoxFunction(LoxCallable):
         for i, param in enumerate(self.declaration.parameters):
             environment.define(param.lexeme, arguments[i])
 
+        ret_value = None
         try:
             interpreter.execute_block(self.declaration.body, environment)
         except StupidReturnException as e:
-            return e.value
+            ret_value = e.value
+
+        if self.is_initializer:
+            # Special case per 12.7.1: Class initializers always return 'this'.
+            this = self.closure.get_at(0, "this")
+            ret_value = this
+        return ret_value
 
     def arity(self):
         return len(self.declaration.parameters)

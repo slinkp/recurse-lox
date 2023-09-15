@@ -125,7 +125,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
             self.execute(stmt.statement)
 
     def visit_function_statement(self, stmt: Function):
-        func = LoxFunction(stmt, self._environment)
+        func = LoxFunction(stmt, self._environment, is_initializer=False)
         self._environment.define(stmt.name.lexeme, func)
 
     def visit_return_stmt(self, stmt: Return):
@@ -140,7 +140,8 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self._environment.define(stmt.name.lexeme, None)
         methods: dict[str, LoxFunction] = {}
         for method in stmt.methods:
-            function = LoxFunction(method, self._environment)
+            is_initializer = method.name.lexeme == "init"
+            function = LoxFunction(method, self._environment, is_initializer=is_initializer)
             methods[method.name.lexeme] = function
 
         _class: LoxClass = LoxClass(stmt.name.lexeme, methods)
