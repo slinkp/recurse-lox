@@ -177,22 +177,22 @@ class ASTPrinter(ExprVisitor):
 
     def visit_assign_expr(self, expr: Assign):
         # Like C, and unlike Python, assignment is an expression, not a statement.
-        return self._parenthesize("assign %s" % expr.name.lexeme, expr.value)
+        return self._parenthesize("= %s" % expr.name.lexeme, expr.value)
 
     def visit_logical_expr(self, expr: Logical):
         return self._parenthesize(expr.operator.lexeme, expr.left, expr.right)
 
     def visit_call_expr(self, expr: Call):
         # hmm, in lisp it's just (func-name arg...)
-        return self._parenthesize(expr.callee, *expr.arguments)
+        return self._parenthesize("call", expr.callee, *expr.arguments)
 
     def visit_get_expr(self, expr: Get):
         # hmmmm
-        return "%s.%s" % (expr.object_, expr.name)
+        return self._parenthesize("get %r" % expr.name.lexeme, expr.object_)
 
     def visit_set_expr(self, expr: Set):
         # hmmmm
-        return self._parenthesize("%s.%s=" % (expr.object_, expr.name), expr.value)
+        return self._parenthesize("set %r" % expr.name.lexeme, expr.object_, expr.value)
 
     def visit_this_expr(self, expr: This):
         # hmmmm
