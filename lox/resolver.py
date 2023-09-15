@@ -8,6 +8,7 @@ from .error import ErrorReporter
 class FunctionType(enum.Enum):
     NONE = 1
     FUNCTION = 2
+    METHOD = 3
 
 
 class Resolver(ExprVisitor, StmtVisitor):
@@ -83,6 +84,8 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_class_stmt(self, stmt: ClassStmt):
         self.declare(stmt.name)
         self.define(stmt.name)
+        for method in stmt.methods:
+            self._resolve_function(method, FunctionType.METHOD)
 
     ######################################################################
     # Expr visitor overrides, the important ones
