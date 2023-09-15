@@ -1,5 +1,5 @@
 import enum
-from .expression import ExprVisitor, Expr, Assign, Variable
+from .expression import ExprVisitor, Expr, Assign, Variable, Get, Set
 from .statement import StmtVisitor, Stmt, Block, Var, Function, Return, ClassStmt
 from .token import Token
 from .error import ErrorReporter
@@ -122,6 +122,15 @@ class Resolver(ExprVisitor, StmtVisitor):
 
     def visit_unary_expr(self, expr):
         self.resolve_expr(expr.right)
+
+    def visit_get_expr(self, expr: Get):
+        # object dot access.
+        # The property itself doesn't need resolving as it's looked up dynamically every time.
+        self.resolve_expr(expr.object_)
+
+    def visit_set_expr(self, expr: Set):
+        self.resolve_expr(expr.value)
+        self.resolve_expr(expr.object_)
 
     ######################################################################
     # Boring stmt visitor overrides

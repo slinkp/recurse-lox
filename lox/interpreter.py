@@ -1,14 +1,14 @@
 from typing import Optional, List, Any
 
 from .error import ErrorReporter, LoxRuntimeError
-from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign, Logical, Call
+from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign, Logical, Call, Get, Set
 from .expression import ExprVisitor
 from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While, Function, Return, ClassStmt
 from .tokentype import TokenType
 from .token import Token
 from .environment import Environment
 from .lox_callable import LoxCallable, StupidReturnException
-from .lox_class import LoxClass
+from .lox_class import LoxClass, LoxInstance
 from .function import LoxFunction
 from . import native_functions
 
@@ -256,6 +256,24 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if len(args) != callee.arity():
             raise LoxRuntimeError("Expected %d arguments but got %d." % (callee.arity(), len(args)), expr.paren)
         return callee.call(self, args)
+
+    def visit_get_expr(self, expr: Get) -> Any:
+        # Object dot access.
+        obj = self.evaluate(expr.object_)
+        if isinstance(obj, LoxInstance):
+            return obj.get(expr.name)
+        else:
+            raise LoxRuntimeError("Only instances have properties.", expr.name)
+
+    def visit_set_expr(self, expr: Set) -> Any:
+        # Object dot assignment.
+        obj = self.evaluate(expr.object_)
+        if isinstance(obj, LoxInstance):
+            value = self.evaluate(expr.value)
+            obj.set(expr.name, value)
+        else:
+            raise LoxRuntimeError("Only instances have fields.", expr.name)
+        return value
 
     ############################################################
     # Helpers

@@ -1,5 +1,5 @@
 from typing import Optional, List
-from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call
+from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call, Get, Set
 from .statement import Stmt, Print, ExpressionStmt, Var, Block, If, While, Function, Return, ClassStmt
 from .tokentype import TokenType
 from .scanner import Token
@@ -202,6 +202,7 @@ class Parser:
         return self.assignment()
 
     def assignment(self) -> Expr:
+        # assignment -> ( call "." )? IDENTIFIER "=" assignment | logic_or ;
         # https://craftinginterpreters.com/statements-and-state.html#assignment-syntax
         expr: Expr = self.or_()
         if self.match(TokenType.EQUAL):
@@ -212,6 +213,11 @@ class Parser:
             if isinstance(expr, Variable):
                 name_token: Token = expr.name
                 return Assign(name_token, value)
+            elif isinstance(expr, Get):
+                # Yes, Get. Object *access* can be the left side of assignment.
+                # See 12.4.2 in the book.
+                get: Get = expr
+                return Set(get.object_, get.name, value)
             else:
                 # We'll support more complex expressions later
                 # (anythign that evaluates to an assignable reference).
@@ -285,12 +291,15 @@ class Parser:
         return self.call()
 
     def call(self) -> Expr:
-        # call -> primary ( "(" arguments? ")" )* ;
+        # call -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
         # arguments -> expression ( "," expression )* ;
         expr: Expr = self.primary()
         while True:
             if self.match(TokenType.LEFT_PAREN):
                 expr = self._finish_call(expr)
+            elif self.match(TokenType.DOT):
+                name = self.consume(TokenType.IDENTIFIER, "Expect property name after '.'.")
+                expr = Get(expr, name)
             else:
                 break
         return expr

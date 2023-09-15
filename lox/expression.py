@@ -81,6 +81,27 @@ class Call(Expr):
         return visitor.visit_call_expr(self)
 
 
+@dataclass
+class Get(Expr):
+    # Used for object.property access
+    object_: Expr
+    name: Token
+
+    def accept(self, visitor):
+        return visitor.visit_get_expr(self)
+
+
+@dataclass
+class Set(Expr):
+    # Used to assign obj properties
+    object_: Expr
+    name: Token
+    value: Expr
+
+    def accept(self, visitor):
+        return visitor.visit_set_expr(self)
+
+
 class ExprVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_binary_expr(self, expr: Binary):
@@ -112,6 +133,10 @@ class ExprVisitor(abc.ABC):
 
     @abc.abstractmethod
     def visit_call_expr(self, expr: Call):
+        pass
+
+    @abc.abstractmethod
+    def visit_get_expr(self, expr: Get) -> Any:
         pass
 
 
@@ -152,6 +177,14 @@ class ASTPrinter(ExprVisitor):
     def visit_call_expr(self, expr: Call):
         # hmm, in lisp it's just (func-name arg...)
         return self._parenthesize(expr.callee, *expr.arguments)
+
+    def visit_get_expr(self, expr: Get):
+        # hmmmm
+        return "%s.%s" % (expr.object_, expr.name)
+
+    def visit_set_expr(self, expr: Set):
+        # hmmmm
+        return self._parenthesize("%s.%s=" % (expr.object_, expr.name), expr.value)
 
     def _parenthesize(self, name, *exprs: Expr):
         strings = ' '.join(expr.accept(self) or "" for expr in exprs)
