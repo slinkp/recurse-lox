@@ -154,38 +154,39 @@ class Interpreter(ExprVisitor, StmtVisitor):
         ttype = expr.operator.tokentype
         # We could turn this into a dict that dispatches to callables,
         # but I don't feel like defining all those methods and I don't like lambdas :-p
-        if ttype == TokenType.EQUAL_EQUAL:
-            return self._is_equal(left, right)
-        elif ttype == TokenType.BANG_EQUAL:
-            return not self._is_equal(left, right)
-        elif ttype == TokenType.GREATER:
-            self._check_number_operands(expr.operator, left, right)
-            return float(left) > float(right)
-        elif ttype == TokenType.GREATER_EQUAL:
-            self._check_number_operands(expr.operator, left, right)
-            return float(left) >= float(right)
-        elif ttype == TokenType.LESS_EQUAL:
-            self._check_number_operands(expr.operator, left, right)
-            return float(left) <= float(right)
-        elif ttype == TokenType.LESS:
-            self._check_number_operands(expr.operator, left, right)
-            return float(left) < float(right)
-        elif ttype == TokenType.MINUS:
-            self._check_number_operands(expr.operator, left, right)
-            return float(left) - float(right)
-        elif ttype == TokenType.PLUS:
-            if isinstance(left, float) and isinstance(right, float):
-                return left + right
-            elif isinstance(left, str) and isinstance(right, str):
-                return left + right
-            else:
-                raise LoxRuntimeError("Operands must be two numbers or two strings.", expr.operator)
-        elif ttype == TokenType.SLASH:
-            self._check_number_operands(expr.operator, left, right)
-            return float(left) / float(right)
-        elif ttype == TokenType.STAR:
-            self._check_number_operands(expr.operator, left, right)
-            return float(left) * float(right)
+        match ttype:
+            case TokenType.EQUAL_EQUAL:
+                return self._is_equal(left, right)
+            case TokenType.BANG_EQUAL:
+                return not self._is_equal(left, right)
+            case TokenType.GREATER:
+                self._check_number_operands(expr.operator, left, right)
+                return float(left) > float(right)
+            case TokenType.GREATER_EQUAL:
+                self._check_number_operands(expr.operator, left, right)
+                return float(left) >= float(right)
+            case TokenType.LESS_EQUAL:
+                self._check_number_operands(expr.operator, left, right)
+                return float(left) <= float(right)
+            case TokenType.LESS:
+                self._check_number_operands(expr.operator, left, right)
+                return float(left) < float(right)
+            case TokenType.MINUS:
+                self._check_number_operands(expr.operator, left, right)
+                return float(left) - float(right)
+            case TokenType.PLUS:
+                if isinstance(left, float) and isinstance(right, float):
+                    return left + right
+                elif isinstance(left, str) and isinstance(right, str):
+                    return left + right
+                else:
+                    raise LoxRuntimeError("Operands must be two numbers or two strings.", expr.operator)
+            case TokenType.SLASH:
+                self._check_number_operands(expr.operator, left, right)
+                return float(left) / float(right)
+            case TokenType.STAR:
+                self._check_number_operands(expr.operator, left, right)
+                return float(left) * float(right)
 
         # Supposedly unreachable.
         return None
