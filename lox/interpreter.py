@@ -5,6 +5,7 @@ from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign
 from .expression import ExprVisitor
 from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While, Function, Return
 from .tokentype import TokenType
+from .token import Token
 from .environment import Environment
 from .lox_callable import LoxCallable, StupidReturnException
 from .function import LoxFunction
@@ -13,11 +14,20 @@ from . import native_functions
 
 class Interpreter(ExprVisitor, StmtVisitor):
 
-    def __init__(self, error_reporter: Optional[ErrorReporter] = None):
+    def __init__(self, error_reporter: Optional[ErrorReporter] = None, use_resolver=False):
         self.error_reporter = error_reporter or ErrorReporter()
         self._environment = Environment()
         self.globals = self._environment
         self.globals.define("clock", native_functions.Clock())
+        self._locals_distance: dict[int, int] = {}
+        if use_resolver:
+            # For chapter 11
+            self._resolve_variable_expr = self._resolve_variable_expr_using_resolver
+            self._assign_value_for_variable = self._assign_value_for_variable_using_resolver
+        else:
+            # For earlier chapters
+            self._resolve_variable_expr = self._resolve_variable_expr_using_current_environment
+            self._assign_value_for_variable = self._assign_value_for_variable_using_current_environment
 
     def interpret(self, statements: List[Stmt]):
         try:
@@ -181,11 +191,42 @@ class Interpreter(ExprVisitor, StmtVisitor):
         return None
 
     def visit_variable_expr(self, expr: Variable):
+        # The one funky thing here is we have two ways to do this depending what chapter we're in.
+        return self._resolve_variable_expr(expr)
+
+    def _resolve_variable_expr_using_current_environment(self, expr: Variable):
+        # Variable resolution as per chapter 8.
         return self._environment.get(expr.name)
+
+    def _resolve_variable_expr_using_resolver(self, expr: Variable):
+        # Variable resolution as per chapter 11, corresponds to lookUpVariable in book code.
+        name: Token = expr.name
+        distance = self._get_distance(expr)
+        if distance is not None:
+            return self._environment.get_at(distance, name.lexeme)
+        else:
+            return self.globals.get(name)
+
+    def _get_distance(self, expr: Expr) -> Optional[int]:
+        return self._locals_distance.get(id(expr))
+
+    def _set_distance(self, expr: Expr, distance: int):
+        self._locals_distance[id(expr)] = distance
 
     def visit_assign_expr(self, expr: Assign) -> Any:
         value: Any = self.evaluate(expr.value)
+        return self._assign_value_for_variable(expr, value)
+
+    def _assign_value_for_variable_using_current_environment(self, expr: Assign, value: Any) -> Any:
         self._environment.assign(expr.name, value)
+        return value
+
+    def _assign_value_for_variable_using_resolver(self, expr: Assign, value: Any) -> Any:
+        distance = self._get_distance(expr)
+        if distance is not None:
+            self._environment.assign_at(distance, expr.name, value)
+        else:
+            self.globals.assign(expr.name, value)
         return value
 
     def visit_logical_expr(self, expr: Logical) -> Any:
@@ -211,6 +252,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     ############################################################
     # Helpers
+
+    def resolve(self, expr: Expr, depth: int):
+        # Records how deep in the environment stack an expression is stored.
+        self._set_distance(expr, depth)
 
     def _is_equal(self, a, b) -> bool:
         if a is None and b is None:

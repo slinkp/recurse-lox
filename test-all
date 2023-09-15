@@ -73,6 +73,10 @@ echo "Chapter 10..."
 dart test/test.dart chap10_functions --interpreter ./bin/coverage -a run -a --append -a ./lox_ch10.py
 STATUS=$(($? + $STATUS))
 
+echo "Chapter 11..."
+dart test/test.dart chap11_resolving --interpreter ./bin/coverage -a run -a --append -a ./lox.py
+STATUS=$(($? + $STATUS))
+
 echo Coverage report...
 coverage report -m
 echo
