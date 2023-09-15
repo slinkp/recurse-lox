@@ -1,6 +1,30 @@
 from typing import Optional, List
-from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call, Get, Set
-from .statement import Stmt, Print, ExpressionStmt, Var, Block, If, While, Function, Return, ClassStmt
+from .expression import (
+    Assign,
+    Binary,
+    Call,
+    Expr,
+    Get,
+    Grouping,
+    Literal,
+    Logical,
+    Set,
+    This,
+    Unary,
+    Variable,
+    )
+from .statement import (
+    Block,
+    ClassStmt,
+    ExpressionStmt,
+    Function,
+    If,
+    Print,
+    Return,
+    Stmt,
+    Var,
+    While,
+    )
 from .tokentype import TokenType
 from .scanner import Token
 from .error import ErrorReporter
@@ -325,9 +349,11 @@ class Parser:
             return Literal(True)
         if self.match(TokenType.NIL):
             return Literal(None)
-
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self.previous().literal)
+
+        if self.match(TokenType.THIS):
+            return This(self.previous())
 
         if self.match(TokenType.IDENTIFIER):
             return Variable(self.previous())

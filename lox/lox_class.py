@@ -4,6 +4,7 @@ from .lox_callable import LoxCallable
 from .function import LoxFunction
 from .token import Token
 from .error import LoxRuntimeError
+from .environment import Environment
 
 
 class LoxClass(LoxCallable):
@@ -40,9 +41,18 @@ class LoxInstance:
 
         method = self.klass.find_method(name.lexeme)
         if method is not None:
+            method = self.bind(method)  # Binding 'this' to the instance
             return method
 
         raise LoxRuntimeError("Undefined property '%s'." % name.lexeme, name)
 
     def set(self, name: Token, value: object):
         self.fields[name.lexeme] = value
+
+    def bind(self, method: LoxFunction) -> LoxFunction:
+        # I chose to put this here instead of LoxFunction
+        # because a) why should functions care?
+        # and b) prevents circular dependency between LoxFunction and LoxInstance
+        env = Environment(method.closure)
+        env.define("this", self)
+        return LoxFunction(method.declaration, env)

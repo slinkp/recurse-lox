@@ -1,5 +1,13 @@
 import enum
-from .expression import ExprVisitor, Expr, Assign, Variable, Get, Set
+from .expression import (
+    Assign,
+    Expr,
+    ExprVisitor,
+    Get,
+    Set,
+    This,
+    Variable
+    )
 from .statement import StmtVisitor, Stmt, Block, Var, Function, Return, ClassStmt
 from .token import Token
 from .error import ErrorReporter
@@ -84,8 +92,11 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_class_stmt(self, stmt: ClassStmt):
         self.declare(stmt.name)
         self.define(stmt.name)
+        self._begin_scope() # Implicit scope for 'this'. Unclear why we don't use the existing one for the body?
+        self.scopes[-1]["this"] = True
         for method in stmt.methods:
             self._resolve_function(method, FunctionType.METHOD)
+        self._end_scope()
 
     ######################################################################
     # Expr visitor overrides, the important ones
@@ -134,6 +145,9 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_set_expr(self, expr: Set):
         self.resolve_expr(expr.value)
         self.resolve_expr(expr.object_)
+
+    def visit_this_expr(self, expr: This):
+        self.resolve_local(expr, expr.keyword)
 
     ######################################################################
     # Boring stmt visitor overrides

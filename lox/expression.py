@@ -102,6 +102,14 @@ class Set(Expr):
         return visitor.visit_set_expr(self)
 
 
+@dataclass
+class This(Expr):
+    keyword: Token
+
+    def accept(self, visitor):
+        return visitor.visit_this_expr(self)
+
+
 class ExprVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_binary_expr(self, expr: Binary):
@@ -185,6 +193,10 @@ class ASTPrinter(ExprVisitor):
     def visit_set_expr(self, expr: Set):
         # hmmmm
         return self._parenthesize("%s.%s=" % (expr.object_, expr.name), expr.value)
+
+    def visit_this_expr(self, expr: This):
+        # hmmmm
+        return "this"
 
     def _parenthesize(self, name, *exprs: Expr):
         strings = ' '.join(expr.accept(self) or "" for expr in exprs)

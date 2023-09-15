@@ -1,7 +1,20 @@
 from typing import Optional, List, Any
 
 from .error import ErrorReporter, LoxRuntimeError
-from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign, Logical, Call, Get, Set
+from .expression import (
+    Assign,
+    Binary,
+    Call,
+    Expr,
+    Get,
+    Grouping,
+    Literal,
+    Logical,
+    Set,
+    This,
+    Unary,
+    Variable,
+    )
 from .expression import ExprVisitor
 from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While, Function, Return, ClassStmt
 from .tokentype import TokenType
@@ -211,8 +224,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
         return self._environment.get(expr.name)
 
     def _resolve_variable_expr_using_resolver(self, expr: Variable):
-        # Variable resolution as per chapter 11, corresponds to lookUpVariable in book code.
+        # Variable resolution as per chapter 11
         name: Token = expr.name
+        return self.lookup_variable_using_resolver(name, expr)
+
+    def lookup_variable_using_resolver(self, name: Token, expr: Expr):
+        # Corresponds to lookUpVariable in book code chapter 11.
         distance = self._get_distance(expr)
         if distance is not None:
             return self._environment.get_at(distance, name.lexeme)
@@ -279,6 +296,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
         else:
             raise LoxRuntimeError("Only instances have fields.", expr.name)
         return value
+
+    def visit_this_expr(self, expr: This) -> Any:
+        return self.lookup_variable_using_resolver(expr.keyword, expr)
 
     ############################################################
     # Helpers
