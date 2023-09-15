@@ -3,11 +3,12 @@ from typing import Optional, List, Any
 from .error import ErrorReporter, LoxRuntimeError
 from .expression import Expr, Binary, Grouping, Literal, Unary, Variable, Assign, Logical, Call
 from .expression import ExprVisitor
-from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While, Function, Return
+from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While, Function, Return, ClassStmt
 from .tokentype import TokenType
 from .token import Token
 from .environment import Environment
 from .lox_callable import LoxCallable, StupidReturnException
+from .lox_class import LoxClass
 from .function import LoxFunction
 from . import native_functions
 
@@ -121,6 +122,11 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if stmt.value is not None:
             value = self.evaluate(stmt.value)
         raise StupidReturnException(value)
+
+    def visit_class_stmt(self, stmt: ClassStmt):
+        self._environment.define(stmt.name.lexeme, None)
+        _class: LoxClass = LoxClass(stmt.name.lexeme)
+        self._environment.assign(stmt.name, _class)
 
     ############################################################
     # ExprVisitor methods

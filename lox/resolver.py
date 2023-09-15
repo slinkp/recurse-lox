@@ -1,6 +1,6 @@
 import enum
 from .expression import ExprVisitor, Expr, Assign, Variable
-from .statement import StmtVisitor, Stmt, Block, Var, Function, Return
+from .statement import StmtVisitor, Stmt, Block, Var, Function, Return, ClassStmt
 from .token import Token
 from .error import ErrorReporter
 
@@ -78,6 +78,10 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.declare(stmt.name)
         if stmt.initializer is not None:
             self.resolve_expr(stmt.initializer)
+        self.define(stmt.name)
+
+    def visit_class_stmt(self, stmt: ClassStmt):
+        self.declare(stmt.name)
         self.define(stmt.name)
 
     ######################################################################

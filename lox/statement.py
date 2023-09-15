@@ -81,6 +81,15 @@ class Return(Stmt):
         visitor.visit_return_stmt(self)
 
 
+@dataclass
+class ClassStmt(Stmt):
+    name: Token
+    methods: list[Function]
+
+    def accept(self, visitor: 'StmtVisitor'):
+        visitor.visit_class_stmt(self)
+
+
 class StmtVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_print_stmt(self, stmt: Print):
@@ -112,4 +121,8 @@ class StmtVisitor(abc.ABC):
 
     @abc.abstractmethod
     def visit_return_stmt(self, stmt: Return):
+        pass
+
+    @abc.abstractmethod
+    def visit_class_stmt(self, stmt: ClassStmt):
         pass

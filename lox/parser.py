@@ -1,6 +1,6 @@
 from typing import Optional, List
 from .expression import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call
-from .statement import Stmt, Print, ExpressionStmt, Var, Block, If, While, Function, Return
+from .statement import Stmt, Print, ExpressionStmt, Var, Block, If, While, Function, Return, ClassStmt
 from .tokentype import TokenType
 from .scanner import Token
 from .error import ErrorReporter
@@ -36,6 +36,8 @@ class Parser:
         try:
             if self.match(TokenType.FUN):
                 return self._function("function")
+            if self.match(TokenType.CLASS):
+                return self._class_declaration()
             if self.match(TokenType.VAR):
                 return self._var_declaration()
             return self.statement()
@@ -61,6 +63,18 @@ class Parser:
         self.consume(TokenType.LEFT_BRACE, "Expect '{' before %s body." % kind)
         body: List[Stmt] = self._block()
         return Function(name, parameters, body)
+
+    def _class_declaration(self) -> ClassStmt:
+        # classDecl -> "class" IDENTIFIER "{" function* "}" ;
+        name = self.consume(TokenType.IDENTIFIER, "Expect class name.")
+        self.consume(TokenType.LEFT_BRACE, "Expect '{' after class name.")
+        methods: list[Function] = []
+        while not self.is_at_end() and not self.check(TokenType.RIGHT_BRACE):
+            method = self._function("method")
+            methods.append(method)
+        self.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
+        _class = ClassStmt(name, methods)
+        return _class
 
     def statement(self) -> Stmt:
         if self.match(TokenType.IF):
