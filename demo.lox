@@ -26,3 +26,20 @@ class ScopeDemo {
   thingy.show();
 }
 
+
+class InitDemo {
+  init(a, b) {
+    this.a = a;
+    if (b == "skip") {
+      return;
+    }
+    this.b = b;
+  }
+  show() {
+    print this.a;
+    print this.b;
+  }
+}
+
+var thingy = InitDemo("hello", "world");
+thingy.show();
