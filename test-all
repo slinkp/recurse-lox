@@ -15,6 +15,10 @@ deactivate 2> /dev/null
 
 source bin/activate || barf "No virtualenv in $HERE??"
 
+# Update TAGS file
+ctags -e -R . 2>/dev/null
+
+
 verify_executables() {
     MISSING=0
     for executable in "$@"; do
