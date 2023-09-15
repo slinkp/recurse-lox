@@ -19,6 +19,11 @@ class FunctionType(enum.Enum):
     METHOD = 3
 
 
+class ClassType(enum.Enum):
+    NONE = 1
+    CLASS = 2
+
+
 class Resolver(ExprVisitor, StmtVisitor):
     """
     Chapter 11:
@@ -37,6 +42,7 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.scopes: list[dict[str, bool]] = []
         # This is just here so we can track if we're inside a function definition or not.
         self._current_function: FunctionType = FunctionType.NONE
+        self._current_class: ClassType = ClassType.NONE
 
     ######################################################################
     # Var resolution
@@ -90,6 +96,8 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.define(stmt.name)
 
     def visit_class_stmt(self, stmt: ClassStmt):
+        _old_enclosing_class = self._current_class
+        self._current_class = ClassType.CLASS
         self.declare(stmt.name)
         self.define(stmt.name)
         self._begin_scope() # Implicit scope for 'this'. Unclear why we don't use the existing one for the body?
@@ -97,6 +105,7 @@ class Resolver(ExprVisitor, StmtVisitor):
         for method in stmt.methods:
             self._resolve_function(method, FunctionType.METHOD)
         self._end_scope()
+        self._current_class = _old_enclosing_class
 
     ######################################################################
     # Expr visitor overrides, the important ones
@@ -147,6 +156,9 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.resolve_expr(expr.object_)
 
     def visit_this_expr(self, expr: This):
+        if self._current_class == ClassType.NONE:
+            self.error_reporter.token_error(expr.keyword, "Can't use 'this' outside of a class.")
+            return None
         self.resolve_local(expr, expr.keyword)
 
     ######################################################################
