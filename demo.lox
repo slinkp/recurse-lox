@@ -1,7 +1,28 @@
-var language = "lox"; // stuff
-var foo = language + "yay";
-{
-    var x = 1;
-    var y = 2.37 ;
-    x <= y;
+var foo = "i'm a global";
+var bar = foo;
+
+class Bacon {
+ eat() {
+    print "Crunch crunch crunch!";
+  }
 }
+
+Bacon().eat(); // Prints "Crunch crunch crunch!".
+
+var method_by_reference = Bacon().eat;
+method_by_reference();
+
+class ScopeDemo {
+ show() {
+   print bar;
+ }
+}
+
+{
+  var bar = "i'm shadowing a global";
+  var thingy = ScopeDemo();
+  thingy.show();
+  bar = "i'm updating and shadowing a global";
+  thingy.show();
+}
+
