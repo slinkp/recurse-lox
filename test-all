@@ -85,6 +85,10 @@ echo "Chapter 12..."
 dart test/test.dart chap12_classes --interpreter ./bin/coverage -a run -a --append -a ./lox.py
 STATUS=$(($? + $STATUS))
 
+echo "Chapter 13..."
+dart test/test.dart chap13_inheritance --interpreter ./bin/coverage -a run -a --append -a ./lox.py
+STATUS=$(($? + $STATUS))
+
 echo Coverage report...
 coverage report -m
 echo

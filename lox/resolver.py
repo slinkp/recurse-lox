@@ -101,7 +101,16 @@ class Resolver(ExprVisitor, StmtVisitor):
         self._current_class = ClassType.CLASS
         self.declare(stmt.name)
         self.define(stmt.name)
-        self._begin_scope() # Implicit scope for 'this'. Unclear why we don't use the existing one for the body?
+
+        if stmt.superclass is not None:
+            if stmt.name.lexeme == stmt.superclass.name.lexeme:
+                self.error_reporter.token_error(
+                    stmt.superclass.name,
+                    "A class can't inherit from itself."
+                    )
+            self.resolve(stmt.superclass)
+
+        self._begin_scope() # Implicit scope for 'this'
         self.scopes[-1]["this"] = True
         for method in stmt.methods:
             ftype = FunctionType.INITIALIZER if method.name.lexeme == "init" else FunctionType.METHOD

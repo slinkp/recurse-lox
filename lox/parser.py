@@ -89,15 +89,22 @@ class Parser:
         return Function(name, parameters, body)
 
     def _class_declaration(self) -> ClassStmt:
-        # classDecl -> "class" IDENTIFIER "{" function* "}" ;
+        # classDecl -> "class" IDENTIFIER ( "<" IDENTIFIER )? "{" function* "}" ;
+
         name = self.consume(TokenType.IDENTIFIER, "Expect class name.")
+
+        superclass = None
+        if self.match(TokenType.LESS):
+            superclass_id = self.consume(TokenType.IDENTIFIER, "Expect superclass name.")
+            superclass = Variable(superclass_id)
+
         self.consume(TokenType.LEFT_BRACE, "Expect '{' after class name.")
         methods: list[Function] = []
         while not self.is_at_end() and not self.check(TokenType.RIGHT_BRACE):
             method = self._function("method")
             methods.append(method)
         self.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
-        _class = ClassStmt(name, methods)
+        _class = ClassStmt(name, methods, superclass)
         return _class
 
     def statement(self) -> Stmt:

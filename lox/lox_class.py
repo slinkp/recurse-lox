@@ -8,9 +8,10 @@ from .environment import Environment
 
 
 class LoxClass(LoxCallable):
-    def __init__(self, name: str, methods: dict[str, LoxFunction]):
+    def __init__(self, name: str, methods: dict[str, LoxFunction], superclass: Optional['LoxClass']):
         self.name = name
         self.methods = methods
+        self.superclass = superclass
 
     def __str__(self):
         return self.name

@@ -3,7 +3,7 @@ from typing import Optional
 import abc
 
 from .scanner import Token
-from .expression import Expr
+from .expression import Expr, Variable
 
 
 class Stmt(abc.ABC):
@@ -85,6 +85,8 @@ class Return(Stmt):
 class ClassStmt(Stmt):
     name: Token
     methods: list[Function]
+    # Superclass is expressed as a single name, but we access it as a variable.
+    superclass: Optional[Variable]
 
     def accept(self, visitor: 'StmtVisitor'):
         visitor.visit_class_stmt(self)
