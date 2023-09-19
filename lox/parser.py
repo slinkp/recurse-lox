@@ -9,6 +9,7 @@ from .expression import (
     Literal,
     Logical,
     Set,
+    Super,
     This,
     Unary,
     Variable,
@@ -349,7 +350,9 @@ class Parser:
         return Call(callee, paren, arguments)
 
     def primary(self) -> Expr:
-        # NUMBER | STRING | "true" | "false" | "nil | "(" expression ")" ;
+        # "true" | "false" | "nil" | "this"
+        #      | NUMBER | STRING | IDENTIFIER | "(" expression ")"
+        #      | "super" "." IDENTIFIER ;
         if self.match(TokenType.FALSE):
             return Literal(False)
         if self.match(TokenType.TRUE):
@@ -358,6 +361,12 @@ class Parser:
             return Literal(None)
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self.previous().literal)
+
+        if self.match(TokenType.SUPER):
+            keyword: Token = self.previous()
+            self.consume(TokenType.DOT, "Expect '.' after super.")
+            method: Token = self.consume(TokenType.IDENTIFIER, "Expect superclass method name.")
+            return Super(keyword, method)
 
         if self.match(TokenType.THIS):
             return This(self.previous())

@@ -110,6 +110,15 @@ class This(Expr):
         return visitor.visit_this_expr(self)
 
 
+@dataclass
+class Super(Expr):
+    keyword: Token
+    method: Token
+
+    def accept(self, visitor):
+        return visitor.visit_super_expr(self)
+
+
 class ExprVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_binary_expr(self, expr: Binary):
@@ -145,6 +154,10 @@ class ExprVisitor(abc.ABC):
 
     @abc.abstractmethod
     def visit_get_expr(self, expr: Get) -> Any:
+        pass
+
+    @abc.abstractmethod
+    def visit_super_expr(self, expr: Super) -> Any:
         pass
 
 
@@ -197,6 +210,9 @@ class ASTPrinter(ExprVisitor):
     def visit_this_expr(self, expr: This):
         # hmmmm
         return "this"
+
+    def visit_super_expr(self, expr: Super):
+        return self._parenthesize("super", expr.method)
 
     def _parenthesize(self, name, *exprs: Expr):
         strings = ' '.join(expr.accept(self) or "" for expr in exprs)

@@ -1,45 +1,9 @@
-var foo = "i'm a global";
-var bar = foo;
-
-class Bacon {
- eat() {
-    print "Crunch crunch crunch!";
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
   }
 }
 
-Bacon().eat(); // Prints "Crunch crunch crunch!".
+class BostonCream < Doughnut {}
 
-var method_by_reference = Bacon().eat;
-method_by_reference();
-
-class ScopeDemo {
- show() {
-   print bar;
- }
-}
-
-{
-  var bar = "i'm shadowing a global";
-  var thingy = ScopeDemo();
-  thingy.show();
-  bar = "i'm updating and shadowing a global";
-  thingy.show();
-}
-
-
-class InitDemo {
-  init(a, b) {
-    this.a = a;
-    if (b == "skip") {
-      return;
-    }
-    this.b = b;
-  }
-  show() {
-    print this.a;
-    print this.b;
-  }
-}
-
-var thingy = InitDemo("hello", "world");
-thingy.show();
+BostonCream().cook();

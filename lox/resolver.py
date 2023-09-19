@@ -5,6 +5,7 @@ from .expression import (
     ExprVisitor,
     Get,
     Set,
+    Super,
     This,
     Variable
     )
@@ -108,13 +109,21 @@ class Resolver(ExprVisitor, StmtVisitor):
                     stmt.superclass.name,
                     "A class can't inherit from itself."
                     )
+
             self.resolve_expr(stmt.superclass)
+
+            self._begin_scope()  # Scope for superclass
+            self.scopes[-1]["super"] = True
 
         self._begin_scope() # Implicit scope for 'this'
         self.scopes[-1]["this"] = True
         for method in stmt.methods:
             ftype = FunctionType.INITIALIZER if method.name.lexeme == "init" else FunctionType.METHOD
             self._resolve_function(method, ftype)
+
+        if stmt.superclass is not None:
+            self._end_scope()
+
         self._end_scope()
         self._current_class = _old_enclosing_class
 
@@ -170,6 +179,9 @@ class Resolver(ExprVisitor, StmtVisitor):
         if self._current_class == ClassType.NONE:
             self.error_reporter.token_error(expr.keyword, "Can't use 'this' outside of a class.")
             return None
+        self.resolve_local(expr, expr.keyword)
+
+    def visit_super_expr(self, expr: Super):
         self.resolve_local(expr, expr.keyword)
 
     ######################################################################

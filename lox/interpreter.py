@@ -11,6 +11,7 @@ from .expression import (
     Literal,
     Logical,
     Set,
+    Super,
     This,
     Unary,
     Variable,
@@ -137,12 +138,17 @@ class Interpreter(ExprVisitor, StmtVisitor):
         raise StupidReturnException(value)
 
     def visit_class_stmt(self, stmt: ClassStmt):
-        self._environment.define(stmt.name.lexeme, None)
         superclass = None
         if stmt.superclass is not None:
             superclass = self.evaluate(stmt.superclass)
             if not isinstance(superclass, LoxClass):
                 raise LoxRuntimeError("Superclass must be a class.", stmt.superclass.name)
+
+        self._environment.define(stmt.name.lexeme, None)
+
+        if superclass is not None:
+            self._environment: Environment = Environment(self._environment)
+            self._environment.define("super", superclass)
 
         methods: dict[str, LoxFunction] = {}
         for method in stmt.methods:
@@ -151,6 +157,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
             methods[method.name.lexeme] = function
 
         _class: LoxClass = LoxClass(stmt.name.lexeme, methods, superclass)
+
+        if superclass is not None:
+            self._environment = self._environment._enclosing
         self._environment.assign(stmt.name, _class)
 
     ############################################################
@@ -306,6 +315,19 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_this_expr(self, expr: This) -> Any:
         return self.lookup_variable_using_resolver(expr.keyword, expr)
+
+    def visit_super_expr(self, expr: Super) -> Any:
+        distance = self._get_distance(expr)
+        superclass: LoxClass = self._environment.get_at(distance, "super")
+
+        # Horrible hack, we just know that 'this' scope is one beyond 'superclass' scope.
+        obj: LoxInstance = self._environment.get_at(distance -1, "this")
+
+        method = superclass.findMethod(expr.method.lexeme)
+        if method is None:
+            raise LoxRuntimeError("Undefined property '%s'." % expr.method.lexeme, expr.method)
+
+        return obj.bind(method)
 
     ############################################################
     # Helpers
