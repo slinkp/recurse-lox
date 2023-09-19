@@ -24,6 +24,7 @@ class FunctionType(enum.Enum):
 class ClassType(enum.Enum):
     NONE = 1
     CLASS = 2
+    SUBCLASS = 3
 
 
 class Resolver(ExprVisitor, StmtVisitor):
@@ -104,6 +105,7 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.define(stmt.name)
 
         if stmt.superclass is not None:
+            self._current_class = ClassType.SUBCLASS
             if stmt.name.lexeme == stmt.superclass.name.lexeme:
                 self.error_reporter.token_error(
                     stmt.superclass.name,
@@ -182,6 +184,10 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.resolve_local(expr, expr.keyword)
 
     def visit_super_expr(self, expr: Super):
+        if self._current_class == ClassType.NONE:
+            self.error_reporter.token_error(expr.keyword, "Can't use 'super' outside of a class.")
+        elif self._current_class != ClassType.SUBCLASS:
+            self.error_reporter.token_error(expr.keyword, "Can't use 'super' in a class with no superclass.")
         self.resolve_local(expr, expr.keyword)
 
     ######################################################################
