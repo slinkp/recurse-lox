@@ -75,7 +75,7 @@ class Function(Stmt):
 @dataclass
 class Return(Stmt):
     keyword: Token  # the `return` itself, for error reporting.
-    value: Expr
+    value: Optional[Expr]
 
     def accept(self, visitor: 'StmtVisitor'):
         visitor.visit_return_stmt(self)

@@ -85,7 +85,7 @@ class Scanner:
             else:
                 self._handle_unexpected_char()
         else:
-            self.error_reporter.error("Bug! Unhandled case for character %s" % c)
+            self.error_reporter.error(self.line, "Bug! Unhandled case for character %s" % c)
 
     def _handle_whitespace(self):
         pass

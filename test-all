@@ -36,10 +36,10 @@ verify_executables() {
 verify_executables mypy coverage dart
 
 echo Type check...
-mypy -p lox
+mypy --check-untyped-defs -p lox
 STATUS=$?
 
-mypy lox.py lox_*.py
+mypy --check-untyped-defs lox.py lox_*.py
 STATUS=$(($? + $STATUS))
 
 rm -rf .coverage
