@@ -34,6 +34,10 @@ class LoxClass(LoxCallable):
     def find_method(self, name: str) -> Optional[LoxFunction]:
         if name in self.methods:
             return self.methods[name]
+
+        if self.superclass is not None:
+            return self.superclass.find_method(name)
+
         return None
 
 
