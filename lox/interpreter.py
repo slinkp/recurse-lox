@@ -142,7 +142,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if stmt.superclass is not None:
             superclass = self.evaluate(stmt.superclass)
             if not isinstance(superclass, LoxClass):
-                raise LoxRuntimeError("Superclass must be a class", stmt.superclass.name)
+                raise LoxRuntimeError("Superclass must be a class.", stmt.superclass.name)
 
         methods: dict[str, LoxFunction] = {}
         for method in stmt.methods:

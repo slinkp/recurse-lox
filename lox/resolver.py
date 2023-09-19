@@ -108,7 +108,7 @@ class Resolver(ExprVisitor, StmtVisitor):
                     stmt.superclass.name,
                     "A class can't inherit from itself."
                     )
-            self.resolve(stmt.superclass)
+            self.resolve_expr(stmt.superclass)
 
         self._begin_scope() # Implicit scope for 'this'
         self.scopes[-1]["this"] = True
