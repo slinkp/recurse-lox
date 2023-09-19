@@ -364,7 +364,7 @@ class Parser:
 
         if self.match(TokenType.SUPER):
             keyword: Token = self.previous()
-            self.consume(TokenType.DOT, "Expect '.' after super.")
+            self.consume(TokenType.DOT, "Expect '.' after 'super'.")
             method: Token = self.consume(TokenType.IDENTIFIER, "Expect superclass method name.")
             return Super(keyword, method)
 

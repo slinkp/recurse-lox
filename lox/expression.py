@@ -212,7 +212,7 @@ class ASTPrinter(ExprVisitor):
         return "this"
 
     def visit_super_expr(self, expr: Super):
-        return self._parenthesize("super", expr.method)
+        return self._parenthesize("super", expr)
 
     def _parenthesize(self, name, *exprs: Expr):
         strings = ' '.join(expr.accept(self) or "" for expr in exprs)

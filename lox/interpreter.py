@@ -147,7 +147,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self._environment.define(stmt.name.lexeme, None)
 
         if superclass is not None:
-            self._environment: Environment = Environment(self._environment)
+            self._environment = Environment(self._environment)
             self._environment.define("super", superclass)
 
         methods: dict[str, LoxFunction] = {}
@@ -159,6 +159,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         _class: LoxClass = LoxClass(stmt.name.lexeme, methods, superclass)
 
         if superclass is not None:
+            assert self._environment._enclosing is not None
             self._environment = self._environment._enclosing
         self._environment.assign(stmt.name, _class)
 
@@ -318,12 +319,13 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_super_expr(self, expr: Super) -> Any:
         distance = self._get_distance(expr)
+        assert distance is not None
         superclass: LoxClass = self._environment.get_at(distance, "super")
 
         # Horrible hack, we just know that 'this' scope is one beyond 'superclass' scope.
         obj: LoxInstance = self._environment.get_at(distance -1, "this")
 
-        method = superclass.findMethod(expr.method.lexeme)
+        method = superclass.find_method(expr.method.lexeme)
         if method is None:
             raise LoxRuntimeError("Undefined property '%s'." % expr.method.lexeme, expr.method)
 
