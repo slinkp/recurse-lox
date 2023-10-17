@@ -202,15 +202,11 @@ class Interpreter(ExprVisitor, StmtVisitor):
         right = self.evaluate(expr.right)
         if expr.operator.tokentype == TokenType.BANG:
             return not self._is_truthy(right)
-        elif expr.operator.tokentype == TokenType.MINUS:
+        if expr.operator.tokentype == TokenType.MINUS:
             self._check_number_operand(expr.operator, right)
             return -(float(right))
-        else:
-            # TODO better error handling? Should never get here anyway.
-            raise Exception("Invalid unary operator %r" % expr.operator)
-
-        # Supposedly unreachable.
-        return None
+        # TODO better error handling? Should never get here anyway.
+        raise SyntaxError("Invalid unary operator %r" % expr.operator)
 
     def visit_binary_expr(self, expr: Binary) -> object:
         # Order matters here! These might have side effects.
@@ -243,10 +239,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
             case TokenType.PLUS:
                 if isinstance(left, float) and isinstance(right, float):
                     return left + right
-                elif isinstance(left, str) and isinstance(right, str):
+                if isinstance(left, str) and isinstance(right, str):
                     return left + right
-                else:
-                    raise LoxRuntimeError("Operands must be two numbers or two strings.", expr.operator)
+                raise LoxRuntimeError("Operands must be two numbers or two strings.", expr.operator)
             case TokenType.SLASH:
                 self._check_number_operands(expr.operator, left, right)
                 return float(left) / float(right)
@@ -275,8 +270,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         distance = self._get_distance(expr)
         if distance is not None:
             return self._environment.get_at(distance, name.lexeme)
-        else:
-            return self.globals.get(name)
+        return self.globals.get(name)
 
     def _get_distance(self, expr: Expr) -> Optional[int]:
         return self._locals_distance.get(id(expr))
@@ -315,18 +309,17 @@ class Interpreter(ExprVisitor, StmtVisitor):
         # Might be a variable, or a callback, method reference ...
         state = CallState()
         self._call_stack.append(state)
-        # print("Call stack after append: size: %s, innermost: %s" % (len(self._call_stack), state))
         try:
             callee = self.evaluate(expr.callee)
             if not isinstance(callee, LoxCallable):
                 raise LoxRuntimeError("Can only call functions and classes.", expr.paren)
             args = [self.evaluate(arg) for arg in expr.arguments]
             if len(args) != callee.arity():
-                raise LoxRuntimeError("Expected %d arguments but got %d." % (callee.arity(), len(args)), expr.paren)
+                raise LoxRuntimeError(
+                    "Expected %d arguments but got %d." % (callee.arity(), len(args)), expr.paren)
             callee.call(self, args)
             return state.return_value
         finally:
-            # print("Call stack before pop: size: %s, popping: %s" % (len(self._call_stack), state))
             self._call_stack.pop()
 
     def visit_get_expr(self, expr: Get) -> Any:
@@ -334,8 +327,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         obj = self.evaluate(expr.object_)
         if isinstance(obj, LoxInstance):
             return obj.get(expr.name)
-        else:
-            raise LoxRuntimeError("Only instances have properties.", expr.name)
+        raise LoxRuntimeError("Only instances have properties.", expr.name)
 
     def visit_set_expr(self, expr: Set) -> Any:
         # Object dot assignment.
