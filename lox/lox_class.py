@@ -23,13 +23,15 @@ class LoxClass(LoxCallable):
         else:
             return 0
 
-    def call(self, interpreter, arguments: list[object]) -> 'LoxInstance':
+    def call(self, interpreter, arguments: list[object]):
         instance: LoxInstance = LoxInstance(self)
         # We implicitly call `instance.init` with the args we got.
         initializer = self.find_method("init")
         if initializer is not None:
             instance.bind(initializer).call(interpreter, arguments)
-        return instance
+        # Special case per 12.7.1: Class initializers always return 'this'.
+        # Needed here in case there is no explicit init method.
+        interpreter.innermost_call_state.return_value = instance
 
     def find_method(self, name: str) -> Optional[LoxFunction]:
         if name in self.methods:

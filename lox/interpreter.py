@@ -1,4 +1,5 @@
 from typing import Optional, List, Any
+from dataclasses import dataclass
 
 from .error import ErrorReporter, LoxRuntimeError
 from .expression import (
@@ -21,10 +22,16 @@ from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If,
 from .tokentype import TokenType
 from .token import Token
 from .environment import Environment
-from .lox_callable import LoxCallable, StupidReturnException
+from .lox_callable import LoxCallable
 from .lox_class import LoxClass, LoxInstance
 from .function import LoxFunction
 from . import native_functions
+
+
+@dataclass
+class CallState:
+    is_returning: bool = False
+    return_value: object = None
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
@@ -35,6 +42,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self.globals = self._environment
         self.globals.define("clock", native_functions.Clock())
         self._locals_distance: dict[int, int] = {}
+        self._call_stack: list[CallState] = []
         if use_resolver:
             # For chapter 11
             self._resolve_variable_expr = self._resolve_variable_expr_using_resolver
@@ -43,6 +51,16 @@ class Interpreter(ExprVisitor, StmtVisitor):
             # For earlier chapters
             self._resolve_variable_expr = self._resolve_variable_expr_using_current_environment
             self._assign_value_for_variable = self._assign_value_for_variable_using_current_environment
+
+    @property
+    def innermost_call_state(self) -> CallState:
+        if self._call_stack:
+            return self._call_stack[-1]
+        return CallState()
+
+    @property
+    def is_returning(self) -> bool:
+        return self.innermost_call_state.is_returning
 
     def interpret(self, statements: List[Stmt]):
         try:
@@ -82,6 +100,8 @@ class Interpreter(ExprVisitor, StmtVisitor):
             self._environment = environment
             for statement in statements:
                 self.execute(statement)
+                if self.is_returning:
+                    break
         finally:
             self._environment = previous_env
 
@@ -124,6 +144,8 @@ class Interpreter(ExprVisitor, StmtVisitor):
         # Thanks to de-sugaring, this also handles For loops
         while self.evaluate(stmt.condition):
             self.execute(stmt.statement)
+            if self.is_returning:
+                break
 
     def visit_function_statement(self, stmt: Function):
         func = LoxFunction(stmt, self._environment, is_initializer=False)
@@ -131,11 +153,14 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_return_stmt(self, stmt: Return):
         # https://craftinginterpreters.com/functions.html#returning-from-calls
-        # Question: Is there any reasonable way of doing this without abusing exceptions?
         value = None
         if stmt.value is not None:
             value = self.evaluate(stmt.value)
-        raise StupidReturnException(value)
+        # Unlike the book, I don't like using exceptions for return values.
+        # Instead we update the top of our stack of CallState, and check
+        # `is_returning` in the few appropriate places.
+        self.innermost_call_state.return_value = value
+        self.innermost_call_state.is_returning = True
 
     def visit_class_stmt(self, stmt: ClassStmt):
         superclass = None
@@ -288,13 +313,21 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_call_expr(self, expr: Call) -> Any:
         # Might be a variable, or a callback, method reference ...
-        callee = self.evaluate(expr.callee)
-        if not isinstance(callee, LoxCallable):
-            raise LoxRuntimeError("Can only call functions and classes.", expr.paren)
-        args = [self.evaluate(arg) for arg in expr.arguments]
-        if len(args) != callee.arity():
-            raise LoxRuntimeError("Expected %d arguments but got %d." % (callee.arity(), len(args)), expr.paren)
-        return callee.call(self, args)
+        state = CallState()
+        self._call_stack.append(state)
+        # print("Call stack after append: size: %s, innermost: %s" % (len(self._call_stack), state))
+        try:
+            callee = self.evaluate(expr.callee)
+            if not isinstance(callee, LoxCallable):
+                raise LoxRuntimeError("Can only call functions and classes.", expr.paren)
+            args = [self.evaluate(arg) for arg in expr.arguments]
+            if len(args) != callee.arity():
+                raise LoxRuntimeError("Expected %d arguments but got %d." % (callee.arity(), len(args)), expr.paren)
+            callee.call(self, args)
+            return state.return_value
+        finally:
+            # print("Call stack before pop: size: %s, popping: %s" % (len(self._call_stack), state))
+            self._call_stack.pop()
 
     def visit_get_expr(self, expr: Get) -> Any:
         # Object dot access.
