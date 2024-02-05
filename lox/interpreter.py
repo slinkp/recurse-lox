@@ -76,7 +76,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
         except LoxRuntimeError as _error:
             self.error_reporter.runtime_error(_error)
 
-    def stringify(self, value):
+    def stringify(self, value: object) -> str:
+        """
+        Convert a value into a good enough string.
+        """
         if value is None:
             return 'nil'
         if isinstance(value, float):
@@ -360,7 +363,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
     # Helpers
 
     def resolve(self, expr: Expr, depth: int):
-        # Records how deep in the environment stack an expression is stored.
+        """
+        Records how deep in the environment stack an expression is stored.
+        """
         self._set_distance(expr, depth)
 
     def _is_equal(self, a, b) -> bool:

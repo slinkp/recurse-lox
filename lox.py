@@ -3,7 +3,6 @@ import sys
 
 from lox.scanner import Scanner
 from lox.parser import Parser
-from lox.expression import ASTPrinter
 from lox.interpreter import Interpreter
 from lox.error import ErrorReporter
 from lox.resolver import Resolver

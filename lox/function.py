@@ -3,10 +3,14 @@ from .lox_callable import LoxCallable
 from . import statement
 from .environment import Environment
 
+
 @dataclass
 class LoxFunction(LoxCallable):
-    # https://craftinginterpreters.com/functions.html#function-objects
+    """
+    Implements basic functions.
 
+    See https://craftinginterpreters.com/functions.html#function-objects
+    """
     declaration: statement.Function
     closure: Environment
     is_initializer: bool = False

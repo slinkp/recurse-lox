@@ -7,23 +7,24 @@ from .expression import Expr, Variable
 
 
 class Stmt(abc.ABC):
-
     @abc.abstractmethod
-    def accept(self, visitor: 'StmtVisitor'):
+    def accept(self, visitor: "StmtVisitor"):
         pass
+
 
 @dataclass
 class Print(Stmt):
     expression: Expr
 
-    def accept(self, visitor: 'StmtVisitor'):
+    def accept(self, visitor: "StmtVisitor"):
         visitor.visit_print_stmt(self)
+
 
 @dataclass
 class ExpressionStmt(Stmt):
     expression: Expr
 
-    def accept(self, visitor: 'StmtVisitor'):
+    def accept(self, visitor: "StmtVisitor"):
         visitor.visit_expression_stmt(self)
 
 
@@ -31,15 +32,16 @@ class ExpressionStmt(Stmt):
 class Block(Stmt):
     statements: list[Stmt]
 
-    def accept(self, visitor: 'StmtVisitor'):
+    def accept(self, visitor: "StmtVisitor"):
         visitor.visit_block_stmt(self)
+
 
 @dataclass
 class Var(Stmt):
     name: Token
     initializer: Optional[Expr]
 
-    def accept(self, visitor: 'StmtVisitor'):
+    def accept(self, visitor: "StmtVisitor"):
         visitor.visit_var_stmt(self)
 
 
@@ -49,7 +51,7 @@ class If(Stmt):
     then_branch: Stmt
     else_branch: Optional[Stmt]
 
-    def accept(self, visitor: 'StmtVisitor'):
+    def accept(self, visitor: "StmtVisitor"):
         visitor.visit_if_stmt(self)
 
 
@@ -58,7 +60,7 @@ class While(Stmt):
     condition: Expr
     statement: Stmt
 
-    def accept(self, visitor: 'StmtVisitor'):
+    def accept(self, visitor: "StmtVisitor"):
         visitor.visit_while_stmt(self)
 
 
@@ -68,7 +70,7 @@ class Function(Stmt):
     parameters: list[Token]
     body: list[Stmt]
 
-    def accept(self, visitor: 'StmtVisitor'):
+    def accept(self, visitor: "StmtVisitor"):
         visitor.visit_function_statement(self)
 
 
@@ -77,7 +79,7 @@ class Return(Stmt):
     keyword: Token  # the `return` itself, for error reporting.
     value: Optional[Expr]
 
-    def accept(self, visitor: 'StmtVisitor'):
+    def accept(self, visitor: "StmtVisitor"):
         visitor.visit_return_stmt(self)
 
 
@@ -88,11 +90,14 @@ class ClassStmt(Stmt):
     # Superclass is expressed as a single name, but we access it as a variable.
     superclass: Optional[Variable]
 
-    def accept(self, visitor: 'StmtVisitor'):
+    def accept(self, visitor: "StmtVisitor"):
         visitor.visit_class_stmt(self)
 
 
 class StmtVisitor(abc.ABC):
+    """
+    Abstract base for Statement visitors.
+    """
     @abc.abstractmethod
     def visit_print_stmt(self, stmt: Print):
         pass

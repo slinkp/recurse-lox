@@ -34,10 +34,12 @@ class Resolver(ExprVisitor, StmtVisitor):
 
     This walks the AST tree after parsing and does a few things:
     - Basic static analysis: Detect some errors like `return` outside a function.
-    - Helps the interpreter resolve variables faster by jumping directly to the correct environment.
-    - This also fixes closures to continue to point to the original location variables even if
-      same names later get added to nearer ancestor scope(s) after function definition.
-      (eg the bug example in https://craftinginterpreters.com/resolving-and-binding.html#static-scope)
+    - Helps the interpreter resolve variables faster by jumping directly to the correct
+      environment.
+    - This also fixes closures to continue to point to the original location variables even
+      if same names later get added to nearer ancestor scope(s) after function definition.
+      (eg the bug example in
+      https://craftinginterpreters.com/resolving-and-binding.html#static-scope)
     """
     def __init__(self, interpreter, error_reporter: ErrorReporter):
         self.interpreter = interpreter

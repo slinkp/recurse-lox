@@ -2,12 +2,18 @@ import sys
 from .tokentype import TokenType
 from .token import Token
 
+
 class LoxRuntimeError(RuntimeError):
     def __init__(self, message, token: Token):
         super().__init__(str(message))
         self.token = token
 
+
 class ErrorReporter:
+    """
+    Simple APIs for error handling.
+    """
+
     def __init__(self):
         self.had_error = False
         self.had_runtime_error = False
@@ -23,18 +29,14 @@ class ErrorReporter:
         header = "Error"
         if where:
             header += " " + where
-        print(
-            "[line %s] %s: %s" % (line, header, message),
-            file=sys.stderr)
+        print("[line %s] %s: %s" % (line, header, message), file=sys.stderr)
 
     def token_error(self, token, message: str):
         if token.tokentype == TokenType.EOF:
             self.report(token.line, "at end", message)
         else:
-            self.report(token.line, "at '%s'"  % token.lexeme, message)
+            self.report(token.line, "at '%s'" % token.lexeme, message)
 
     def runtime_error(self, error: LoxRuntimeError):
         self.had_runtime_error = True
-        print(
-            "%s\n[line %s]" % (error, error.token.line),
-            file=sys.stderr)
+        print("%s\n[line %s]" % (error, error.token.line), file=sys.stderr)
