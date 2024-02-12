@@ -16,9 +16,21 @@ from .expression import (
     This,
     Unary,
     Variable,
-    )
+)
 from .expression import ExprVisitor
-from .statement import Stmt, StmtVisitor, ExpressionStmt, Print, Var, Block, If, While, Function, Return, ClassStmt
+from .statement import (
+    Stmt,
+    StmtVisitor,
+    ExpressionStmt,
+    Print,
+    Var,
+    Block,
+    If,
+    While,
+    Function,
+    Return,
+    ClassStmt,
+)
 from .tokentype import TokenType
 from .token import Token
 from .environment import Environment
@@ -36,7 +48,9 @@ class CallState:
 
 class Interpreter(ExprVisitor, StmtVisitor):
 
-    def __init__(self, error_reporter: Optional[ErrorReporter] = None, use_resolver=False):
+    def __init__(
+        self, error_reporter: Optional[ErrorReporter] = None, use_resolver=False
+    ):
         self.error_reporter = error_reporter or ErrorReporter()
         self._environment = Environment()
         self.globals = self._environment
@@ -46,11 +60,17 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if use_resolver:
             # For chapter 11
             self._resolve_variable_expr = self._resolve_variable_expr_using_resolver
-            self._assign_value_for_variable = self._assign_value_for_variable_using_resolver
+            self._assign_value_for_variable = (
+                self._assign_value_for_variable_using_resolver
+            )
         else:
             # For earlier chapters
-            self._resolve_variable_expr = self._resolve_variable_expr_using_current_environment
-            self._assign_value_for_variable = self._assign_value_for_variable_using_current_environment
+            self._resolve_variable_expr = (
+                self._resolve_variable_expr_using_current_environment
+            )
+            self._assign_value_for_variable = (
+                self._assign_value_for_variable_using_current_environment
+            )
 
     @property
     def innermost_call_state(self) -> CallState:
@@ -81,17 +101,17 @@ class Interpreter(ExprVisitor, StmtVisitor):
         Convert a value into a good enough string.
         """
         if value is None:
-            return 'nil'
+            return "nil"
         if isinstance(value, float):
             text = str(value)
             # Described at https://craftinginterpreters.com/evaluating-expressions.html#hooking-up-the-interpreter
             # this is hacky: explicit floats that happen to be int-ish will print like ints :shrug:
-            if text.endswith('.0'):
+            if text.endswith(".0"):
                 text = text[:-2]
             return text
         if isinstance(value, bool):
             return str(value).lower()
-        return str(value) # Hope this works for everything else :D
+        return str(value)  # Hope this works for everything else :D
 
     def execute(self, statement: Stmt):
         # Generic "visit any kind of statement"
@@ -108,7 +128,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         finally:
             self._environment = previous_env
 
-    def evaluate(self, expr: Expr):
+    def evaluate(self, expr: Expr) -> object:
         # Generic "visit any kind of expression"
         return expr.accept(self)
 
@@ -170,7 +190,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if stmt.superclass is not None:
             superclass = self.evaluate(stmt.superclass)
             if not isinstance(superclass, LoxClass):
-                raise LoxRuntimeError("Superclass must be a class.", stmt.superclass.name)
+                raise LoxRuntimeError(
+                    "Superclass must be a class.", stmt.superclass.name
+                )
 
         self._environment.define(stmt.name.lexeme, None)
 
@@ -181,7 +203,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
         methods: dict[str, LoxFunction] = {}
         for method in stmt.methods:
             is_initializer = method.name.lexeme == "init"
-            function = LoxFunction(method, self._environment, is_initializer=is_initializer)
+            function = LoxFunction(
+                method, self._environment, is_initializer=is_initializer
+            )
             methods[method.name.lexeme] = function
 
         _class: LoxClass = LoxClass(stmt.name.lexeme, methods, superclass)
@@ -244,7 +268,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
                     return left + right
                 if isinstance(left, str) and isinstance(right, str):
                     return left + right
-                raise LoxRuntimeError("Operands must be two numbers or two strings.", expr.operator)
+                raise LoxRuntimeError(
+                    "Operands must be two numbers or two strings.", expr.operator
+                )
             case TokenType.SLASH:
                 self._check_number_operands(expr.operator, left, right)
                 return float(left) / float(right)
@@ -285,11 +311,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
         value: Any = self.evaluate(expr.value)
         return self._assign_value_for_variable(expr, value)
 
-    def _assign_value_for_variable_using_current_environment(self, expr: Assign, value: Any) -> Any:
+    def _assign_value_for_variable_using_current_environment(
+        self, expr: Assign, value: Any
+    ) -> Any:
         self._environment.assign(expr.name, value)
         return value
 
-    def _assign_value_for_variable_using_resolver(self, expr: Assign, value: Any) -> Any:
+    def _assign_value_for_variable_using_resolver(
+        self, expr: Assign, value: Any
+    ) -> Any:
         distance = self._get_distance(expr)
         if distance is not None:
             self._environment.assign_at(distance, expr.name, value)
@@ -315,11 +345,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
         try:
             callee = self.evaluate(expr.callee)
             if not isinstance(callee, LoxCallable):
-                raise LoxRuntimeError("Can only call functions and classes.", expr.paren)
+                raise LoxRuntimeError(
+                    "Can only call functions and classes.", expr.paren
+                )
             args = [self.evaluate(arg) for arg in expr.arguments]
             if len(args) != callee.arity():
                 raise LoxRuntimeError(
-                    "Expected %d arguments but got %d." % (callee.arity(), len(args)), expr.paren)
+                    "Expected %d arguments but got %d." % (callee.arity(), len(args)),
+                    expr.paren,
+                )
             callee.call(self, args)
             return state.return_value
         finally:
@@ -351,11 +385,13 @@ class Interpreter(ExprVisitor, StmtVisitor):
         superclass: LoxClass = self._environment.get_at(distance, "super")
 
         # Horrible hack, we just know that 'this' scope is one beyond 'superclass' scope.
-        obj: LoxInstance = self._environment.get_at(distance -1, "this")
+        obj: LoxInstance = self._environment.get_at(distance - 1, "this")
 
         method = superclass.find_method(expr.method.lexeme)
         if method is None:
-            raise LoxRuntimeError("Undefined property '%s'." % expr.method.lexeme, expr.method)
+            raise LoxRuntimeError(
+                "Undefined property '%s'." % expr.method.lexeme, expr.method
+            )
 
         return obj.bind(method)
 

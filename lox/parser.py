@@ -13,7 +13,7 @@ from .expression import (
     This,
     Unary,
     Variable,
-    )
+)
 from .statement import (
     Block,
     ClassStmt,
@@ -25,7 +25,7 @@ from .statement import (
     Stmt,
     Var,
     While,
-    )
+)
 from .tokentype import TokenType
 from .scanner import Token
 from .error import ErrorReporter
@@ -33,8 +33,13 @@ from .error import ErrorReporter
 
 MAX_ARGS = 255
 
+
 class Parser:
-    def __init__(self, tokens: Optional[list[Token]] = None, error_reporter: Optional[ErrorReporter] = None):
+    def __init__(
+        self,
+        tokens: Optional[list[Token]] = None,
+        error_reporter: Optional[ErrorReporter] = None,
+    ):
         self.current = 0
         self.tokens = tokens or []
         self.error_reporter = error_reporter or ErrorReporter()
@@ -77,7 +82,9 @@ class Parser:
         if not self.check(TokenType.RIGHT_PAREN):
             while True:
                 if len(parameters) >= MAX_ARGS:
-                    self.error(self.peek(), "Can't have more than %d parameters." % MAX_ARGS)
+                    self.error(
+                        self.peek(), "Can't have more than %d parameters." % MAX_ARGS
+                    )
                 parameters.append(
                     self.consume(TokenType.IDENTIFIER, "Expect parameter name.")
                 )
@@ -96,7 +103,9 @@ class Parser:
 
         superclass = None
         if self.match(TokenType.LESS):
-            superclass_id = self.consume(TokenType.IDENTIFIER, "Expect superclass name.")
+            superclass_id = self.consume(
+                TokenType.IDENTIFIER, "Expect superclass name."
+            )
             superclass = Variable(superclass_id)
 
         self.consume(TokenType.LEFT_BRACE, "Expect '{' after class name.")
@@ -157,9 +166,9 @@ class Parser:
         # "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement
         self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.")
         initializer: Optional[Stmt] = None
-        if (self.match(TokenType.SEMICOLON)):
+        if self.match(TokenType.SEMICOLON):
             initializer = None
-        elif (self.match(TokenType.VAR)):
+        elif self.match(TokenType.VAR):
             initializer = self._var_declaration()
         else:
             initializer = self._expression_statement()
@@ -258,7 +267,7 @@ class Parser:
 
     def or_(self) -> Expr:
         expr: Expr = self.and_()
-        while (self.match(TokenType.OR)):
+        while self.match(TokenType.OR):
             operator = self.previous()
             right = self.and_()  # Why is this and()?
             expr = Logical(expr, operator, right)
@@ -266,7 +275,7 @@ class Parser:
 
     def and_(self) -> Expr:
         expr: Expr = self.equality()
-        while (self.match(TokenType.AND)):
+        while self.match(TokenType.AND):
             operator = self.previous()
             right = self.equality()
             expr = Logical(expr, operator, right)
@@ -287,7 +296,12 @@ class Parser:
     def comparison(self) -> Expr:
         expr = self.term()
 
-        while self.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL):
+        while self.match(
+            TokenType.GREATER,
+            TokenType.GREATER_EQUAL,
+            TokenType.LESS,
+            TokenType.LESS_EQUAL,
+        ):
             operator = self.previous()
             right = self.term()
             expr = Binary(expr, operator, right)
@@ -330,7 +344,9 @@ class Parser:
             if self.match(TokenType.LEFT_PAREN):
                 expr = self._finish_call(expr)
             elif self.match(TokenType.DOT):
-                name = self.consume(TokenType.IDENTIFIER, "Expect property name after '.'.")
+                name = self.consume(
+                    TokenType.IDENTIFIER, "Expect property name after '.'."
+                )
                 expr = Get(expr, name)
             else:
                 break
@@ -341,7 +357,9 @@ class Parser:
         if not self.check(TokenType.RIGHT_PAREN):
             while True:
                 if len(arguments) >= MAX_ARGS:
-                    self.error(self.peek(), "Can't have more than %d arguments." % MAX_ARGS)
+                    self.error(
+                        self.peek(), "Can't have more than %d arguments." % MAX_ARGS
+                    )
                 arguments.append(self.expression())
                 if not self.match(TokenType.COMMA):
                     break
@@ -365,7 +383,9 @@ class Parser:
         if self.match(TokenType.SUPER):
             keyword: Token = self.previous()
             self.consume(TokenType.DOT, "Expect '.' after 'super'.")
-            method: Token = self.consume(TokenType.IDENTIFIER, "Expect superclass method name.")
+            method: Token = self.consume(
+                TokenType.IDENTIFIER, "Expect superclass method name."
+            )
             return Super(keyword, method)
 
         if self.match(TokenType.THIS):
@@ -408,7 +428,6 @@ class Parser:
             raise ParseError("Unexpected end of stream")
         return self.tokens[self.current]
 
-
     def previous(self) -> Token:
         return self.tokens[self.current - 1]
 
@@ -423,7 +442,7 @@ class Parser:
             return self.advance()
         raise self.error(self.peek(), err_message)
 
-    def error(self, token: Token, message: str) -> 'ParseError':
+    def error(self, token: Token, message: str) -> "ParseError":
         # Return instead of raising so the caller can decide
         # whether to bomb out or attempt to recover and parse more.
         # https://craftinginterpreters.com/parsing-expressions.html#entering-panic-mode
@@ -438,13 +457,13 @@ class Parser:
             if self.previous().tokentype == TokenType.SEMICOLON:
                 return
             elif self.peek().tokentype in (
-                    TokenType.FUN,
-                    TokenType.VAR,
-                    TokenType.OR,
-                    TokenType.IF,
-                    TokenType.WHILE,
-                    TokenType.PRINT,
-                    TokenType.RETURN,
+                TokenType.FUN,
+                TokenType.VAR,
+                TokenType.OR,
+                TokenType.IF,
+                TokenType.WHILE,
+                TokenType.PRINT,
+                TokenType.RETURN,
             ):
                 return
             else:

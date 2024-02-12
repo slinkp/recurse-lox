@@ -1,8 +1,13 @@
 from typing import Optional
 from .tokentype import TokenType
 
+
 class Token:
-    def __init__(self, tokentype: TokenType, lexeme: str, literal: Optional[str], line: int=0):
+
+    """Representing a typed unit of Lox source, along with metadata such as line number."""
+
+    def __init__(self, tokentype: TokenType, lexeme: str, literal: Optional[str], line: int = 0):
+        """Literal will be None except for literal types such as strings, numbers."""
         self.tokentype = tokentype
         self.lexeme = lexeme
         self.literal = literal
@@ -11,6 +16,7 @@ class Token:
     def __str__(self):
         literal = "null" if self.literal is None else self.literal
         return "%s %s %s" % (self.tokentype.name, self.lexeme, literal)
+
 
     def __repr__(self):
         fields = "TokenType.%s, %r, %r" % (self.tokentype.name, self.lexeme, self.literal)
