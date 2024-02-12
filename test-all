@@ -11,9 +11,9 @@ safe() { "$@" || barf "cannot $*"; }
 
 safe cd "$HERE"
 
-deactivate 2> /dev/null
+# deactivate 2> /dev/null
 
-source bin/activate || barf "No virtualenv in $HERE??"
+# source bin/activate || barf "No virtualenv in $HERE??"
 
 # Update TAGS file
 ctags -e -R . 2>/dev/null
