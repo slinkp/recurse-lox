@@ -22,3 +22,7 @@ stack-data==0.6.2
 traitlets==5.9.0
 typing_extensions==4.7.1
 wcwidth==0.2.6
+python-lsp-server
+python-lsp-black
+pylsp-mypy
+flake8
