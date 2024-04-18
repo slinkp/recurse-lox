@@ -3,6 +3,8 @@
 Working through https://craftinginterpreters.com/
 but in Python 3.
 
+This was my last project at [recurse summer 2023](https://www.recurse.com/)
+
 ## Q: How far can I get in 4 hours??
 
 ## A: Finished chapter 6!
