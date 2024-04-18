@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 from typing import Optional, List
 
 from . import error

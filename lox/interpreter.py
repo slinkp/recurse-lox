@@ -42,6 +42,7 @@ from . import native_functions
 
 @dataclass
 class CallState:
+    """Encapsulates information about state of one level of the call stack."""
     is_returning: bool = False
     return_value: object = None
 
