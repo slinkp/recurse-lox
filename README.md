@@ -24,6 +24,80 @@ so there were some undiscovered bugs in my code, but I'm still really happy with
 All the tests through chapter 13 (Inheritance) are passing.
 It took about 1900 lines of python. This was my main project during those weeks.
 
+## Q: What's different about this interpreter compared to the Java implementation in the book?
+
+## A1: Doesn't use exceptions for `return` statement control flow
+
+For interpreting a `return` statement, the book made an expedient design choice
+to [throw and catch a `Return` exception](https://craftinginterpreters.com/functions.html#returning-from-calls)
+
+This works without a lot of code, and I followed this pattern at first. But
+using exceptions for non-exceptional behavior smells bad to me, so I came back
+later to see if I could do without - and it [turned out to be pretty
+easy, by adding a little stack of call state to the
+interpreter.](https://github.com/slinkp/recurse-lox/commit/edd19a989be4ba0a9c919af61445b0d0da7f9b5d)
+The trickiest part was remembering edge cases like returning a class instance from
+a Class statement with no declared initializer.
+
+## A2: No code generation needed
+
+Python in general requires less boilerplate than Java, and I stole an idea from
+a fellow Recurser to use [dataclasses](https://docs.python.org/3/library/dataclasses.html)
+to help me trivially express the strongly typed attributes of eg `Expr`
+subclasses.  So I didn't need any equivalent to the book's
+`tool/GenerateAst.java` at all.
+
+For example, the book defines a [code generation script](https://craftinginterpreters.com/representing-code.html#metaprogramming-the-trees) that we'd run to turn this Java source:
+
+```java
+    defineAst(outputDir, "Expr", Arrays.asList(
+      "Binary   : Expr left, Token operator, Expr right",
+      // ... other expression types 
+    ));
+```
+... into [this generated code](https://craftinginterpreters.com/appendix-ii.html#binary-expression):
+
+```java
+  static class Binary extends Expr {
+    Binary(Expr left, Token operator, Expr right) {
+      this.left = left;
+      this.operator = operator;
+      this.right = right;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitBinaryExpr(this);
+    }
+
+    final Expr left;
+    final Token operator;
+    final Expr right;
+  }
+```
+
+In Python, I can express this same interface very compactly like so:
+
+```python3
+@dataclass
+class Binary(Expr):
+    left: Expr
+    operator: Token
+    right: Expr
+
+    def accept(self, visitor):
+        return visitor.visit_binary_expr(self)
+
+```
+
+(Granted, I was lazy about static typing for the `accept` method.)
+
+Otherwise, for the most part, the code follows the same design as the book with much the
+same class structure, aside from some minor ad-hoc refactoring and differences
+due to language conventions.
+
+
+
 ## Testing
 
 I wrapped up my python unit tests (with `coverage` reports), `mypy` type
