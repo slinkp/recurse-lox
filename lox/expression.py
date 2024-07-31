@@ -8,8 +8,8 @@ from .scanner import Token
 class Expr(abc.ABC):
 
     @abc.abstractmethod
-    def accept(self, visitor: 'ExprVisitor'):
-        pass # pragma: no cover
+    def accept(self, visitor: "ExprVisitor"):
+        pass  # pragma: no cover
 
 
 @dataclass
@@ -21,6 +21,7 @@ class Binary(Expr):
     def accept(self, visitor):
         return visitor.visit_binary_expr(self)
 
+
 @dataclass
 class Grouping(Expr):
     expression: Expr
@@ -28,12 +29,14 @@ class Grouping(Expr):
     def accept(self, visitor):
         return visitor.visit_grouping_expr(self)
 
+
 @dataclass
 class Literal(Expr):
     value: object
 
     def accept(self, visitor):
         return visitor.visit_literal_expr(self)
+
 
 @dataclass
 class Unary(Expr):
@@ -59,6 +62,7 @@ class Variable(Expr):
 
     def accept(self, visitor):
         return visitor.visit_variable_expr(self)
+
 
 @dataclass
 class Logical(Expr):
@@ -122,43 +126,43 @@ class Super(Expr):
 class ExprVisitor(abc.ABC):
     @abc.abstractmethod
     def visit_binary_expr(self, expr: Binary):
-        pass # pragma: no-cover
+        pass  # pragma: no-cover
 
     @abc.abstractmethod
     def visit_grouping_expr(self, expr: Grouping):
-        pass # pragma: no-cover
+        pass  # pragma: no-cover
 
     @abc.abstractmethod
     def visit_literal_expr(self, expr: Literal):
-        pass # pragma: no-cover
+        pass  # pragma: no-cover
 
     @abc.abstractmethod
     def visit_unary_expr(self, expr: Unary):
-        pass # pragma: no-cover
+        pass  # pragma: no-cover
 
     @abc.abstractmethod
     def visit_variable_expr(self, expr: Variable):
-        pass # pragma: no-cover
+        pass  # pragma: no-cover
 
     @abc.abstractmethod
     def visit_assign_expr(self, expr: Assign) -> Any:
-        pass # pragma: no-cover
+        pass  # pragma: no-cover
 
     @abc.abstractmethod
     def visit_logical_expr(self, expr: Logical):
-        pass # pragma: no-cover
+        pass  # pragma: no-cover
 
     @abc.abstractmethod
     def visit_call_expr(self, expr: Call):
-        pass # pragma: no-cover
+        pass  # pragma: no-cover
 
     @abc.abstractmethod
     def visit_get_expr(self, expr: Get) -> Any:
-        pass # pragma: no-cover
+        pass  # pragma: no-cover
 
     @abc.abstractmethod
     def visit_super_expr(self, expr: Super) -> Any:
-        pass # pragma: no-cover
+        pass  # pragma: no-cover
 
 
 class ASTPrinter(ExprVisitor):
@@ -215,6 +219,5 @@ class ASTPrinter(ExprVisitor):
         return "super.%s" % expr.method.lexeme
 
     def _parenthesize(self, name, *exprs: Expr):
-        strings = ' '.join(expr.accept(self) or "" for expr in exprs)
+        strings = " ".join(expr.accept(self) or "" for expr in exprs)
         return "(%s %s)" % (name, strings)
-
